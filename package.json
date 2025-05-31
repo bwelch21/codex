@@ -1,0 +1,52 @@
+{
+  "name": "food-allergy-assistant",
+  "version": "1.0.0",
+  "description": "A comprehensive food allergy assistant application with API backend, web frontend, and web server",
+  "private": true,
+  "workspaces": [
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web-server\" \"npm run dev:frontend\"",
+    "dev:api": "npm run dev --workspace=services/api",
+    "dev:web-server": "npm run dev --workspace=services/web-server", 
+    "dev:frontend": "npm run dev --workspace=services/frontend",
+    "build": "npm run build --workspaces",
+    "build:api": "npm run build --workspace=services/api",
+    "build:web-server": "npm run build --workspace=services/web-server",
+    "build:frontend": "npm run build --workspace=services/frontend",
+    "start": "concurrently \"npm run start:api\" \"npm run start:web-server\" \"npm run start:frontend\"",
+    "start:api": "npm run start --workspace=services/api",
+    "start:web-server": "npm run start --workspace=services/web-server",
+    "start:frontend": "npm run start --workspace=services/frontend",
+    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces",
+    "clean": "npm run clean --workspaces && rimraf node_modules",
+    "install:all": "npm install",
+    "start-dev": "./start-dev.sh",
+    "stop-dev": "./stop-dev.sh",
+    "test:api": "curl -s http://localhost:4000/api/ping | python3 -m json.tool",
+    "test:web-server": "curl -s http://localhost:3001/api/hello-world | python3 -m json.tool",
+    "test:frontend": "curl -s http://localhost:5173 | head -5",
+    "test:all": "npm run test:api && npm run test:web-server && npm run test:frontend",
+    "status": "echo '🌐 Web Server:' && curl -s http://localhost:3001/health | python3 -m json.tool 2>/dev/null && echo '🔧 API Server:' && curl -s http://localhost:4000/health | python3 -m json.tool 2>/dev/null && echo '⚛️  Frontend:' && curl -s http://localhost:5173 > /dev/null && echo 'Running ✅' || echo 'Not running ❌'"
+  },
+  "keywords": [
+    "food-allergy",
+    "restaurant",
+    "travel",
+    "express",
+    "react",
+    "typescript",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 

@@ -1,0 +1,342 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Food Allergy Assistant - Project Introduction
+
+## 🎯 Project Mission
+A comprehensive food allergy assistant application designed to improve quality of life for people with food allergies, focusing on safe dining and travel experiences. The application provides essential tools and information for individuals with food allergies to navigate restaurants, travel, and daily food choices with confidence and safety.
+
+## 🏗️ Project Architecture
+
+### Monorepo Structure
+This is a **npm workspaces monorepo** with three distinct services:
+
+```
+├── services/
+│   ├── api/              # Internal API Backend (Port 4000)
+│   ├── web-server/       # Public-facing Web Server (Port 3001)
+│   └── frontend/         # React Frontend Application (Port 5173)
+├── start-dev.sh          # Single development startup script
+├── stop-dev.sh           # Development cleanup script
+├── package.json          # Root workspace configuration
+├── .nvmrc               # Node.js version (18.18.2)
+└── .cursor/
+    └── rules/
+        └── project-intro.mdc  # This file
+```
+
+### Service Communication Flow
+```
+User Browser
+    ↓ (HTTP requests)
+Frontend (React - Port 5173)
+    ↓ (API calls to Port 3001)
+Web Server (Express - Port 3001)
+    ↓ (Internal calls to Port 4000)
+API Service (Express - Port 4000)
+```
+
+## 📦 Service Responsibilities
+
+### 1. API Service (`services/api/`) - Port 4000
+**Purpose**: Internal business logic and data management
+- **Technology**: Express.js + TypeScript
+- **Responsibilities**:
+  - Core application business logic
+  - Data persistence and retrieval
+  - Authentication and authorization (future)
+  - Allergen database management (future)
+  - Complex business rule processing
+- **Current Endpoints**:
+  - `GET /api/ping` - Service connectivity test
+  - `GET /health` - Health check and uptime
+- **Architecture Notes**:
+  - Uses ts-node-dev for hot reloading in development
+  - Strict TypeScript configuration
+  - Centralized error handling with custom AppError class
+  - Security middleware (helmet, cors, compression, rate limiting)
+
+### 2. Web Server (`services/web-server/`) - Port 3001
+**Purpose**: Public-facing API that the frontend connects to
+- **Technology**: Express.js + TypeScript
+- **Responsibilities**:
+  - Client-facing API endpoints
+  - Request routing and validation
+  - Rate limiting and security
+  - CORS configuration for frontend
+  - API gateway functionality
+  - Request/response transformation
+- **Current Endpoints**:
+  - `GET /api/hello-world` - Returns welcome message with service info
+  - `GET /health` - Health check and uptime
+- **Architecture Notes**:
+  - Configured for frontend communication (CORS enabled)
+  - Structured JSON responses with success/error patterns
+  - Morgan logging for request tracking
+  - Graceful shutdown handling
+
+### 3. Frontend (`services/frontend/`) - Port 5173
+**Purpose**: User interface and experience
+- **Technology**: React + TypeScript + Vite
+- **Responsibilities**:
+  - User interface components
+  - State management
+  - API integration with web server
+  - Responsive design
+  - User experience optimization
+- **Current Features**:
+  - Modern React with hooks
+  - Landing page with API integration
+  - Component-based architecture
+  - Real-time API calls with loading/error states
+- **Architecture Notes**:
+  - Vite for fast development and building
+  - ESLint + Prettier for code quality
+  - Type-safe API calls to web server
+
+## 🎨 Design System
+
+### Color Palette (Food Allergy Focused)
+Located in `services/frontend/src/constants/theme.ts`:
+
+```typescript
+colors: {
+  primary: '#f97316',    // Orange - Food allergy awareness color
+  secondary: '#3b82f6',  // Blue - Trust and reliability
+  success: '#22c55e',    // Green - Allergen-free confirmations
+  warning: '#f59e0b',    // Amber - Allergen alerts
+  error: '#ef4444',      // Red - Allergen dangers
+  neutral: {             // Gray scale for text and backgrounds
+    50: '#f9fafb',
+    // ... complete gray scale
+  }
+}
+```
+
+### Typography System
+```typescript
+fonts: {
+  primary: 'Inter',        // Modern, highly readable
+  secondary: 'Merriweather', // Elegant serif for emphasis
+  mono: 'JetBrains Mono'   // Code and data display
+}
+```
+
+### Spacing & Layout
+- **Base unit**: 8px (using 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px)
+- **Breakpoints**: sm: 640px, md: 768px, lg: 1024px, xl: 1280px
+- **Border radius**: 4px, 8px, 12px, 16px
+- **Shadows**: Subtle elevation system
+
+### Design System Usage Rules
+1. **Always use theme constants** - Never hardcode colors, spacing, or fonts
+2. **Mobile-first responsive design** - Start with mobile, enhance for desktop
+3. **Accessibility first** - Color contrast, focus states, semantic HTML
+4. **Component composition** - Build complex UIs from simple, reusable components
+5. **Consistent spacing** - Use the 8px grid system for all layout decisions
+
+## ⚛️ React Code Organization
+
+### File Structure
+```
+src/
+├── components/          # Reusable UI components
+│   ├── Button/         # One component per directory
+│   │   ├── index.ts    # Export barrel
+│   │   └── Button.tsx  # Component implementation
+├── pages/              # Route-level components
+├── services/           # API and external services
+├── constants/          # Theme, API configs, constants
+├── hooks/              # Custom React hooks
+├── utils/              # Pure utility functions
+└── types/              # TypeScript type definitions
+```
+
+### Component Rules
+1. **Single Responsibility**: Each component should have one clear purpose
+2. **Composition over Inheritance**: Use component composition patterns
+3. **Props Interface**: Always define TypeScript interfaces for props
+4. **Default Props**: Use default parameters rather than defaultProps
+5. **Hooks at Top**: All hooks must be called at the top level
+6. **Named Exports**: Use named exports for components, default for pages
+
+### Component Template
+```typescript
+import React from 'react';
+import { theme } from '../../constants/theme';
+
+interface ComponentNameProps {
+  // Define all props with types
+  children?: React.ReactNode;
+  variant?: 'primary' | 'secondary';
+  disabled?: boolean;
+}
+
+export const ComponentName: React.FC<ComponentNameProps> = ({
+  children,
+  variant = 'primary',
+  disabled = false,
+}) => {
+  // Component logic here
+  
+  return (
+    <div style={{ /* Use theme constants */ }}>
+      {children}
+    </div>
+  );
+};
+```
+
+### State Management Rules
+1. **useState for local state**: Component-specific state
+2. **useContext for shared state**: Cross-component communication
+3. **Custom hooks for logic**: Extract reusable stateful logic
+4. **Props drilling limit**: Max 2-3 levels, then use context
+
+## 🛠️ Technologies & Tools
+
+### Backend (API + Web Server)
+- **Runtime**: Node.js 18.18.2
+- **Framework**: Express.js 4.18.2
+- **Language**: TypeScript 5.3.3
+- **Development**: ts-node-dev for hot reloading
+- **Security**: helmet, cors, compression, express-rate-limit
+- **Logging**: morgan
+- **Build**: tsc (TypeScript compiler)
+
+### Frontend
+- **Framework**: React 18.2.0
+- **Build Tool**: Vite 5.0.8
+- **Language**: TypeScript 5.2.2
+- **Styling**: Inline styles with theme system
+- **Dev Tools**: ESLint, Prettier
+
+### Development Tools
+- **Package Manager**: npm with workspaces
+- **Version Control**: Git
+- **Code Quality**: ESLint + Prettier
+- **Process Management**: Custom bash scripts
+
+## 📋 Coding Standards
+
+### TypeScript Rules
+1. **Strict mode enabled**: All TypeScript strict checks on
+2. **Explicit types**: Always define interfaces and types
+3. **No any**: Avoid `any` type, use `unknown` if needed
+4. **Import organization**: External imports first, then internal
+5. **Barrel exports**: Use index.ts files for clean imports
+
+### Error Handling
+1. **Custom Error Classes**: Use AppError class for consistent errors
+2. **Try-Catch**: Wrap async operations in try-catch
+3. **Error Boundaries**: React error boundaries for UI errors
+4. **Graceful Degradation**: App should work with partial failures
+
+### API Response Format
+All API responses follow this structure:
+```typescript
+// Success Response
+{
+  "success": true,
+  "data": {
+    // Response data here
+  }
+}
+
+// Error Response
+{
+  "success": false,
+  "error": {
+    "message": "Human readable error",
+    "code": "ERROR_CODE",
+    "timestamp": "ISO date string"
+  }
+}
+```
+
+## 🚀 Development Workflow
+
+### Getting Started
+1. Ensure Node.js 18.18.2 (use `nvm use`)
+2. Run `npm install` in project root
+3. Start all services: `./start-dev.sh`
+4. Stop services: `./stop-dev.sh`
+
+### Development Commands
+```bash
+# Start all services
+./start-dev.sh
+
+# Individual service development
+npm run dev:api
+npm run dev:web-server
+npm run dev:frontend
+
+# Testing
+npm run test:all
+npm run status
+
+# Code quality
+npm run lint
+npm run format
+```
+
+### Port Assignment
+- **3001**: Web Server (public API)
+- **4000**: API Service (internal)
+- **5173**: Frontend (Vite dev server)
+
+### Logging
+- All service logs: `services/logs/`
+- Follow logs: `tail -f services/logs/*.log`
+- Structured logging with timestamps
+
+## 🔄 Development Principles
+
+### Food Allergy Context
+1. **Safety First**: All features must prioritize user safety
+2. **Clear Communication**: Information must be unambiguous
+3. **Accessibility**: Design for users with various needs
+4. **Trust Building**: Transparent about data sources and limitations
+
+### Code Quality
+1. **Test-Driven Development**: Write tests for business logic
+2. **Documentation**: Code should be self-documenting
+3. **Performance**: Optimize for fast response times
+4. **Security**: Always validate inputs, sanitize outputs
+
+### Future Architecture Considerations
+1. **Database Integration**: Plan for PostgreSQL/MongoDB integration
+2. **Authentication**: JWT-based auth system
+3. **Caching**: Redis for performance optimization
+4. **Monitoring**: Health checks and metrics collection
+5. **Deployment**: Docker containerization and CI/CD
+
+## 🎯 Development Guidelines for AI Agents
+
+### When Adding New Features
+1. **Follow the service separation**: API logic in api/, client logic in web-server/, UI in frontend/
+2. **Use the design system**: Always reference theme constants
+3. **Type everything**: No untyped code should be committed
+4. **Test endpoints**: Verify all new API endpoints work
+5. **Update documentation**: Keep README and this file current
+
+### Common Patterns
+- Use the existing error handling patterns
+- Follow the established API response structure
+- Implement loading and error states in UI
+- Use the component composition patterns
+- Leverage the development scripts for testing
+
+### Performance Considerations
+- Minimize bundle size in frontend
+- Use appropriate HTTP status codes
+- Implement proper caching headers
+- Optimize database queries (when added)
+- Monitor memory usage in Node.js services
+
+---
+
+**Remember**: This is a food allergy application where user safety is paramount. Every feature should be designed with the understanding that incorrect information could have serious health consequences.
