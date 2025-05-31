@@ -1,0 +1,251 @@
+---
+description: 
+globs: *.tsx,tailwind.config.js,postcss.config.js,services/frontend/*
+alwaysApply: false
+---
+# Component Styling Rules
+
+## Tailwind CSS Pattern for React Components
+
+All React components in this project MUST use Tailwind CSS utility classes for styling. This provides rapid development, consistent design, and excellent performance through utility-first CSS.
+
+### Styling Approach
+
+- **Primary Method**: Use Tailwind utility classes directly in component JSX
+- **Custom Styles**: Use `@layer components` in CSS files for complex reusable components
+- **Theme Integration**: Leverage the custom Tailwind config with food allergy color palette
+
+### Component Implementation Pattern
+
+#### 1. Basic Component with Tailwind Classes
+```typescript
+import React from 'react';
+
+interface ComponentNameProps {
+  variant?: 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  className?: string;
+}
+
+export function ComponentName({
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  className = '',
+  ...props
+}: ComponentNameProps) {
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200';
+  
+  const variantClasses = {
+    primary: 'bg-primary-500 hover:bg-primary-600 text-white',
+    secondary: 'bg-secondary-500 hover:bg-secondary-600 text-white',
+  };
+  
+  const sizeClasses = {
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-3 text-base',
+    lg: 'px-6 py-4 text-lg',
+  };
+
+  const componentClasses = [
+    baseClasses,
+    variantClasses[variant],
+    sizeClasses[size],
+    disabled && 'opacity-60 cursor-not-allowed',
+    className,
+  ].filter(Boolean).join(' ');
+
+  return (
+    <div className={componentClasses} {...props}>
+      {/* component content */}
+    </div>
+  );
+}
+```
+
+#### 2. Complex Components with Class Maps
+For components with many variants, use class mapping objects:
+
+```typescript
+const variantClassNames = {
+  primary: 'bg-primary-500 hover:bg-primary-600 text-white shadow-sm hover:shadow-md',
+  secondary: 'bg-secondary-500 hover:bg-secondary-600 text-white shadow-sm hover:shadow-md',
+  success: 'bg-success-500 hover:bg-success-600 text-white shadow-sm hover:shadow-md',
+  warning: 'bg-warning-500 hover:bg-warning-600 text-white shadow-sm hover:shadow-md',
+  error: 'bg-error-500 hover:bg-error-600 text-white shadow-sm hover:shadow-md',
+  outline: 'bg-transparent hover:bg-primary-50 text-primary-500 border border-primary-500',
+};
+
+const sizeClassNames = {
+  sm: 'px-3 py-2 text-sm',
+  md: 'px-4 py-3 text-base',
+  lg: 'px-6 py-4 text-lg',
+};
+```
+
+### Custom Color Palette
+
+The project uses a food allergy-focused color palette configured in `tailwind.config.js`:
+
+```javascript
+colors: {
+  primary: { /* Orange - Food allergy awareness */ },
+  secondary: { /* Blue - Trust and reliability */ },
+  success: { /* Green - Allergen-free confirmations */ },
+  warning: { /* Amber - Allergen alerts */ },
+  error: { /* Red - Allergen dangers */ },
+}
+```
+
+Use these semantic colors:
+- `text-primary-500`, `bg-primary-500` - Main orange theme
+- `text-success-600`, `bg-success-50` - Safe/allergen-free states
+- `text-error-600`, `bg-error-50` - Dangerous/allergen states
+- `text-warning-600`, `bg-warning-50` - Caution states
+
+### Responsive Design Pattern
+
+Use Tailwind's responsive prefixes for mobile-first design:
+
+```jsx
+<div className="p-4 md:p-8 max-w-sm md:max-w-2xl">
+  <h1 className="text-2xl md:text-4xl font-bold">Title</h1>
+  <div className="flex flex-col md:flex-row gap-4">
+    {/* Content */}
+  </div>
+</div>
+```
+
+### State Management with Classes
+
+Handle interactive states using Tailwind modifiers:
+
+```jsx
+<button className="
+  bg-primary-500 
+  hover:bg-primary-600 
+  active:bg-primary-700 
+  disabled:opacity-60 
+  disabled:cursor-not-allowed
+  focus:ring-2 
+  focus:ring-primary-500 
+  focus:ring-offset-2
+">
+  Button
+</button>
+```
+
+### Animation and Transitions
+
+Use Tailwind's built-in animations and transitions:
+
+```jsx
+// Loading spinner
+<div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+
+// Smooth transitions
+<div className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg" />
+
+// Fade in/out
+<div className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+```
+
+### Reusable Component Patterns
+
+#### Button Component Structure
+```typescript
+const variantClassNames = { /* variant mappings */ };
+const sizeClassNames = { /* size mappings */ };
+
+const baseClassNames = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2';
+
+const buttonClassNames = [
+  baseClassNames,
+  variantClassNames[variant],
+  sizeClassNames[size],
+  fullWidth && 'w-full',
+  disabled && 'opacity-60 cursor-not-allowed',
+  className,
+].filter(Boolean).join(' ');
+```
+
+#### Layout Component Structure
+```jsx
+// Container with responsive padding
+<div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 bg-gray-50">
+  
+  // Card layout
+  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg max-w-2xl w-full">
+    
+    // Typography
+    <h1 className="text-3xl md:text-4xl font-bold text-primary-500 mb-4">
+    <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+    
+    // Button groups
+    <div className="flex flex-col md:flex-row gap-4 justify-center">
+```
+
+### Accessibility with Tailwind
+
+Ensure proper accessibility using Tailwind utilities:
+
+```jsx
+<button className="
+  focus:outline-none 
+  focus:ring-2 
+  focus:ring-primary-500 
+  focus:ring-offset-2
+  active:ring-primary-600
+">
+
+<div className="sr-only">Screen reader only text</div>
+
+<img className="..." alt="Descriptive text" />
+```
+
+### Performance Optimization
+
+- **Class Composition**: Use arrays and filter for conditional classes
+- **Utility Grouping**: Group related utilities together for readability
+- **Custom Components**: Extract common patterns into reusable components
+- **Tree Shaking**: Tailwind automatically removes unused styles
+
+### Development Guidelines
+
+1. **Mobile-First**: Always start with mobile styles, add larger breakpoints
+2. **Semantic Colors**: Use the custom color palette (primary, success, error, warning)
+3. **Consistent Spacing**: Use the 4px grid system (4, 8, 12, 16, 24, 32, 48, 64)
+4. **Typography Scale**: Use consistent font sizes and weights
+5. **Interactive States**: Always include hover, focus, and active states
+6. **Loading States**: Implement proper loading indicators with animations
+
+### File Organization
+
+- **tailwind.config.js**: Custom theme configuration
+- **src/index.css**: Tailwind directives and custom base styles
+- **Components**: Use utility classes directly in JSX
+- **No CSS Modules**: All styling through Tailwind utilities
+
+### Common Patterns
+
+#### Form Elements
+```jsx
+<input className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+```
+
+#### Cards and Containers
+```jsx
+<div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200" />
+```
+
+#### Status Messages
+```jsx
+// Success
+<div className="text-success-600 bg-success-50 p-4 rounded-lg border border-success-200" />
+
+// Error  
+<div className="text-error-600 bg-error-50 p-4 rounded-lg border border-error-200" />
+```
+
+This approach provides rapid development, consistent design, and excellent maintainability while leveraging the full power of Tailwind CSS. 

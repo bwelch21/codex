@@ -1,4 +1,4 @@
-import createApp from './app';
+import { createApp } from './app';
 
 const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -28,4 +28,4 @@ process.on('SIGINT', () => {
   });
 });
 
-export default app; 
+export { app }; 

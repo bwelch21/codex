@@ -5,10 +5,11 @@ import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
-import helloWorldRoutes from './routes/helloWorld';
+import { helloWorldRoutes } from './routes/helloWorld';
+import { imageUploadRoutes } from './routes/imageUpload';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
-const createApp = (): Application => {
+export function createApp(): Application {
   const app: Application = express();
 
   // Security middleware
@@ -46,6 +47,7 @@ const createApp = (): Application => {
 
   // Routes
   app.use('/api', helloWorldRoutes);
+  app.use('/api', imageUploadRoutes);
 
   // Health check endpoint
   app.get('/health', (_req: Request, res: Response) => {
@@ -62,6 +64,4 @@ const createApp = (): Application => {
   app.use(errorHandler);
 
   return app;
-};
-
-export default createApp; 
+} 

@@ -4,6 +4,18 @@ export interface HelloWorldResponse {
   service: string;
 }
 
+export interface ImageUploadResponse {
+  message: string;
+  file: {
+    originalName: string;
+    size: number;
+    mimetype: string;
+    uploadedAt: string;
+  };
+  timestamp: string;
+  service: string;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;

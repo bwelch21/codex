@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { colors, typography, spacing, boxShadow, borderRadius } from '../../constants/theme';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 
 interface HelloWorldData {
   message: string;
@@ -15,14 +14,14 @@ interface ApiResponse {
   error?: string;
 }
 
-const LandingPage: React.FC = () => {
+export function LandingPage() {
   const [data, setData] = useState<HelloWorldData | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<string | null>(null);
 
-  const fetchHelloWorld = async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
+  async function fetchHelloWorld(): Promise<void> {
+    setIsLoading(true);
+    setHasError(null);
 
     try {
       const response = await fetch('http://localhost:3001/api/hello-world');
@@ -39,98 +38,31 @@ const LandingPage: React.FC = () => {
         throw new Error(result.error || 'Failed to fetch data');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setHasError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
     fetchHelloWorld();
   }, []);
 
-  const containerStyle = {
-    minHeight: '100vh',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing[8],
-    backgroundColor: colors.neutral[50],
-    fontFamily: typography.fontFamily.primary,
-  };
-
-  const cardStyle = {
-    backgroundColor: colors.white,
-    padding: spacing[8],
-    borderRadius: borderRadius.xl,
-    boxShadow: boxShadow.lg,
-    textAlign: 'center' as const,
-    maxWidth: '600px',
-    width: '100%',
-  };
-
-  const titleStyle = {
-    fontSize: typography.fontSize['4xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.primary[500],
-    marginBottom: spacing[4],
-    lineHeight: typography.lineHeight.tight,
-  };
-
-  const subtitleStyle = {
-    fontSize: typography.fontSize.lg,
-    color: colors.neutral[600],
-    marginBottom: spacing[8],
-    lineHeight: typography.lineHeight.relaxed,
-  };
-
-  const messageStyle = {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.success[600],
-    backgroundColor: colors.success[50],
-    padding: spacing[4],
-    borderRadius: borderRadius.md,
-    marginBottom: spacing[6],
-    border: `1px solid ${colors.success[200]}`,
-  };
-
-  const metaInfoStyle = {
-    fontSize: typography.fontSize.sm,
-    color: colors.neutral[500],
-    marginBottom: spacing[6],
-    fontFamily: typography.fontFamily.mono,
-  };
-
-  const errorStyle = {
-    fontSize: typography.fontSize.base,
-    color: colors.error[600],
-    backgroundColor: colors.error[50],
-    padding: spacing[4],
-    borderRadius: borderRadius.md,
-    marginBottom: spacing[6],
-    border: `1px solid ${colors.error[200]}`,
-  };
-
-  const loadingStyle = {
-    fontSize: typography.fontSize.base,
-    color: colors.neutral[600],
-    marginBottom: spacing[6],
-  };
+  const hasData = data && !isLoading && !hasError;
 
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h1 style={titleStyle}>Food Allergy Assistant</h1>
-        <p style={subtitleStyle}>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-8 bg-gray-50 font-primary">
+      <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-2xl w-full">
+        <h1 className="text-4xl font-bold text-primary-500 mb-4 leading-tight">
+          Food Allergy Assistant
+        </h1>
+        <p className="text-lg text-gray-600 mb-8 leading-relaxed">
           Your comprehensive companion for safe dining and travel with food allergies
         </p>
 
-        {loading && (
-          <div style={loadingStyle}>
-            <div style={{ marginBottom: spacing[4] }}>
+        {isLoading && (
+          <div className="text-base text-gray-600 mb-6">
+            <div className="mb-4">
               Loading message from server...
             </div>
             <Button loading={true} disabled={true}>
@@ -139,26 +71,26 @@ const LandingPage: React.FC = () => {
           </div>
         )}
 
-        {error && (
-          <div style={errorStyle}>
-            <strong>Error:</strong> {error}
+        {hasError && (
+          <div className="text-base text-error-600 bg-error-50 p-4 rounded-lg mb-6 border border-error-200">
+            <strong>Error:</strong> {hasError}
           </div>
         )}
 
-        {data && !loading && !error && (
+        {hasData && (
           <>
-            <div style={messageStyle}>
+            <div className="text-xl font-medium text-success-600 bg-success-50 p-4 rounded-lg mb-6 border border-success-200">
               {data.message}
             </div>
-            <div style={metaInfoStyle}>
+            <div className="text-sm text-gray-500 mb-6 font-mono">
               <div>Service: {data.service}</div>
               <div>Timestamp: {new Date(data.timestamp).toLocaleString()}</div>
             </div>
           </>
         )}
 
-        <div style={{ display: 'flex', gap: spacing[4], justifyContent: 'center', flexWrap: 'wrap' as const }}>
-          <Button onClick={fetchHelloWorld} disabled={loading}>
+        <div className="flex gap-4 justify-center flex-wrap">
+          <Button onClick={fetchHelloWorld} disabled={isLoading}>
             Refresh Message
           </Button>
           <Button variant="outline" disabled={true}>
@@ -166,25 +98,11 @@ const LandingPage: React.FC = () => {
           </Button>
         </div>
 
-        <div style={{ 
-          marginTop: spacing[8], 
-          padding: spacing[6], 
-          backgroundColor: colors.neutral[100], 
-          borderRadius: borderRadius.md 
-        }}>
-          <h3 style={{ 
-            fontSize: typography.fontSize.lg, 
-            fontWeight: typography.fontWeight.semibold,
-            color: colors.neutral[700],
-            marginBottom: spacing[4]
-          }}>
+        <div className="mt-8 p-6 bg-gray-100 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">
             Coming Soon Features:
           </h3>
-          <ul style={{ 
-            textAlign: 'left' as const, 
-            color: colors.neutral[600],
-            lineHeight: typography.lineHeight.relaxed 
-          }}>
+          <ul className="text-left text-gray-600 leading-relaxed space-y-2 pl-5">
             <li>🍽️ Allergen-safe restaurant discovery</li>
             <li>✈️ Travel-friendly food allergy guides</li>
             <li>📱 Emergency allergy information cards</li>
@@ -195,6 +113,4 @@ const LandingPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default LandingPage; 
+} 

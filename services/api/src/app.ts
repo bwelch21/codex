@@ -5,10 +5,10 @@ import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
-import pingRoutes from './routes/ping';
+import { pingRoutes } from './routes/ping';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
-const createApp = (): Application => {
+export function createApp(): Application {
   const app: Application = express();
 
   // Security middleware
@@ -61,6 +61,4 @@ const createApp = (): Application => {
   app.use(errorHandler);
 
   return app;
-};
-
-export default createApp; 
+} 
