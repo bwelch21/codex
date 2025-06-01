@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import { ApiResponse, ImageUploadResponse, ErrorResponse } from '../types';
+import { ApiResponse, ImageUploadResponse } from '../types';
 
 const router = Router();
 
@@ -8,18 +8,24 @@ const router = Router();
 const storage = multer.memoryStorage();
 
 // File filter to only allow specific image types and PDFs
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+): void => {
   const allowedMimeTypes = [
     'image/jpeg',
-    'image/jpg', 
+    'image/jpg',
     'image/png',
-    'application/pdf'
+    'application/pdf',
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only PNG, JPEG, and PDF files are allowed.'));
+    cb(
+      new Error('Invalid file type. Only PNG, JPEG, and PDF files are allowed.')
+    );
   }
 };
 
@@ -33,10 +39,15 @@ const upload = multer({
 });
 
 // Error handler for multer errors
-const handleMulterError = (error: any, req: Request, res: Response, next: NextFunction) => {
+const handleMulterError = (
+  error: unknown,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Response | void => {
   if (error instanceof multer.MulterError) {
     let message: string;
-    
+
     switch (error.code) {
       case 'LIMIT_FILE_SIZE':
         message = 'File size too large. Maximum size is 10MB.';
@@ -59,10 +70,10 @@ const handleMulterError = (error: any, req: Request, res: Response, next: NextFu
     return res.status(400).json(errorResponse);
   }
 
-  if (error && error.message) {
+  if (error && typeof error === 'object' && 'message' in error) {
     const errorResponse: ApiResponse<null> = {
       success: false,
-      error: error.message,
+      error: (error as { message: string }).message,
     };
 
     return res.status(400).json(errorResponse);
@@ -72,59 +83,66 @@ const handleMulterError = (error: any, req: Request, res: Response, next: NextFu
 };
 
 // Image upload endpoint
-router.post('/upload-image', upload.single('image'), handleMulterError, (req: Request, res: Response): void => {
-  try {
-    // Check if file was uploaded
-    if (!req.file) {
-      const errorResponse: ApiResponse<null> = {
-        success: false,
-        error: 'No file uploaded. Please select an image file.',
+router.post(
+  '/upload-image',
+  upload.single('image'),
+  handleMulterError,
+  (req: Request, res: Response): void => {
+    try {
+      // Check if file was uploaded
+      if (!req.file) {
+        const errorResponse: ApiResponse<null> = {
+          success: false,
+          error: 'No file uploaded. Please select an image file.',
+        };
+
+        res.status(400).json(errorResponse);
+        return;
+      }
+
+      const file = req.file;
+      const uploadedAt = new Date().toISOString();
+
+      // Log file metadata (as requested)
+      // eslint-disable-next-line no-console
+      console.log('📸 Image Upload Metadata:', {
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        sizeInMB: (file.size / 1024 / 1024).toFixed(2),
+        uploadedAt,
+        bufferLength: file.buffer.length,
+      });
+
+      // Create successful response
+      const response: ApiResponse<ImageUploadResponse> = {
+        success: true,
+        data: {
+          message: 'Image uploaded successfully',
+          file: {
+            originalName: file.originalname,
+            size: file.size,
+            mimetype: file.mimetype,
+            uploadedAt,
+          },
+          timestamp: new Date().toISOString(),
+          service: 'web-server',
+        },
       };
 
-      res.status(400).json(errorResponse);
-      return;
+      res.status(200).json(response);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Image upload error:', error);
+
+      const errorResponse: ApiResponse<null> = {
+        success: false,
+        error: 'An unexpected error occurred while processing the image.',
+      };
+
+      res.status(500).json(errorResponse);
     }
-
-    const file = req.file;
-    const uploadedAt = new Date().toISOString();
-
-    // Log file metadata (as requested)
-    console.log('📸 Image Upload Metadata:', {
-      originalName: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-      sizeInMB: (file.size / 1024 / 1024).toFixed(2),
-      uploadedAt,
-      bufferLength: file.buffer.length,
-    });
-
-    // Create successful response
-    const response: ApiResponse<ImageUploadResponse> = {
-      success: true,
-      data: {
-        message: 'Image uploaded successfully',
-        file: {
-          originalName: file.originalname,
-          size: file.size,
-          mimetype: file.mimetype,
-          uploadedAt,
-        },
-        timestamp: new Date().toISOString(),
-        service: 'web-server',
-      },
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
-    console.error('❌ Image upload error:', error);
-
-    const errorResponse: ApiResponse<null> = {
-      success: false,
-      error: 'An unexpected error occurred while processing the image.',
-    };
-
-    res.status(500).json(errorResponse);
   }
-});
+);
 
-export { router as imageUploadRoutes }; 
+export { router as imageUploadRoutes };

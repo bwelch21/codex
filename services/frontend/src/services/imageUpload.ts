@@ -1,4 +1,4 @@
-import { API_CONFIG } from '../constants/api';
+import { API_CONFIG } from "../constants/api";
 
 export interface ImageUploadResponse {
   message: string;
@@ -12,7 +12,7 @@ export interface ImageUploadResponse {
   service: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -28,10 +28,10 @@ export class ImageUploadError extends Error {
   constructor(
     message: string,
     public statusCode?: number,
-    public originalError?: any
+    public originalError?: unknown,
   ) {
     super(message);
-    this.name = 'ImageUploadError';
+    this.name = "ImageUploadError";
   }
 }
 
@@ -43,12 +43,12 @@ export class ImageUploadError extends Error {
  */
 export async function uploadImage(
   file: File,
-  onProgress?: (progress: UploadProgress) => void
+  onProgress?: (progress: UploadProgress) => void,
 ): Promise<ImageUploadResponse> {
   try {
     // Create FormData for multipart upload
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append("image", file);
 
     // Create XMLHttpRequest for progress tracking
     return new Promise<ImageUploadResponse>((resolve, reject) => {
@@ -56,7 +56,7 @@ export async function uploadImage(
 
       // Track upload progress
       if (onProgress && xhr.upload) {
-        xhr.upload.addEventListener('progress', (event) => {
+        xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             const progress: UploadProgress = {
               loaded: event.loaded,
@@ -69,59 +69,59 @@ export async function uploadImage(
       }
 
       // Handle response
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener("load", () => {
         try {
-          const response: ApiResponse<ImageUploadResponse> = JSON.parse(xhr.responseText);
+          const response: ApiResponse<ImageUploadResponse> = JSON.parse(
+            xhr.responseText,
+          );
 
           if (xhr.status >= 200 && xhr.status < 300 && response.success) {
             resolve(response.data!);
           } else {
-            const errorMessage = response.error || 'Upload failed';
+            const errorMessage = response.error || "Upload failed";
             reject(new ImageUploadError(errorMessage, xhr.status, response));
           }
         } catch (parseError) {
-          reject(new ImageUploadError(
-            'Invalid response from server',
-            xhr.status,
-            parseError
-          ));
+          reject(
+            new ImageUploadError(
+              "Invalid response from server",
+              xhr.status,
+              parseError,
+            ),
+          );
         }
       });
 
       // Handle network errors
-      xhr.addEventListener('error', () => {
-        reject(new ImageUploadError(
-          'Network error occurred during upload',
-          xhr.status
-        ));
+      xhr.addEventListener("error", () => {
+        reject(
+          new ImageUploadError(
+            "Network error occurred during upload",
+            xhr.status,
+          ),
+        );
       });
 
       // Handle timeout
-      xhr.addEventListener('timeout', () => {
-        reject(new ImageUploadError(
-          'Upload request timed out',
-          xhr.status
-        ));
+      xhr.addEventListener("timeout", () => {
+        reject(new ImageUploadError("Upload request timed out", xhr.status));
       });
 
       // Handle abort
-      xhr.addEventListener('abort', () => {
-        reject(new ImageUploadError(
-          'Upload was cancelled',
-          xhr.status
-        ));
+      xhr.addEventListener("abort", () => {
+        reject(new ImageUploadError("Upload was cancelled", xhr.status));
       });
 
       // Configure and send request
-      xhr.open('POST', `${API_CONFIG.WEB_SERVER.BASE_URL}/api/upload-image`);
+      xhr.open("POST", `${API_CONFIG.WEB_SERVER.BASE_URL}/api/upload-image`);
       xhr.timeout = 30000; // 30 second timeout
       xhr.send(formData);
     });
   } catch (error) {
     throw new ImageUploadError(
-      'Failed to prepare upload request',
+      "Failed to prepare upload request",
       undefined,
-      error
+      error,
     );
   }
-} 
+}

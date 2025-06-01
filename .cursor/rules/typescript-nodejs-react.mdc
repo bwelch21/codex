@@ -1,7 +1,7 @@
 ---
 description: 
-globs: *tsx,*.ts,*.module.css
-alwaysApply: false
+globs: 
+alwaysApply: true
 ---
 You are an expert in TypeScript, Node.js, React, Vite, TanStack Query, TanStack Router, and Tailwind.
 
@@ -43,3 +43,6 @@ Performance Optimization
   - Use efficient algorithms
   - Use efficient rendering strategies
   - Use efficient state management
+
+  Node Commands
+  - Always run `source ~/.nvm/nvm.sh && nvm use` before running and node or npm command.

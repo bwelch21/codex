@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '../ui/Button';
+import { useState, useEffect } from "react";
+import { Button } from "../ui/Button";
 
 interface HelloWorldData {
   message: string;
@@ -24,21 +24,23 @@ export function LandingPage() {
     setHasError(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/hello-world');
-      
+      const response = await fetch("http://localhost:3001/api/hello-world");
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result: ApiResponse = await response.json();
-      
+
       if (result.success && result.data) {
         setData(result.data);
       } else {
-        throw new Error(result.error || 'Failed to fetch data');
+        throw new Error(result.error || "Failed to fetch data");
       }
     } catch (err) {
-      setHasError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setHasError(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -57,14 +59,13 @@ export function LandingPage() {
           Food Allergy Assistant
         </h1>
         <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-          Your comprehensive companion for safe dining and travel with food allergies
+          Your comprehensive companion for safe dining and travel with food
+          allergies
         </p>
 
         {isLoading && (
           <div className="text-base text-gray-600 mb-6">
-            <div className="mb-4">
-              Loading message from server...
-            </div>
+            <div className="mb-4">Loading message from server...</div>
             <Button loading={true} disabled={true}>
               Fetching Data
             </Button>
@@ -113,4 +114,4 @@ export function LandingPage() {
       </div>
     </div>
   );
-} 
+}

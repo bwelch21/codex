@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 export interface PhotoUploadHookState {
   file: File | null;
@@ -29,12 +29,12 @@ export function usePhotoUpload(): PhotoUploadHookReturn {
   const handleFileSelect = useCallback((file: File | null) => {
     if (file) {
       // Create preview for image files
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = (e) => {
           setState({
             file,
-            preview: e.target?.result as string || null,
+            preview: (e.target?.result as string) || null,
             isUploaded: true,
             error: null,
           });
@@ -74,4 +74,4 @@ export function usePhotoUpload(): PhotoUploadHookReturn {
     clearFile,
     hasFile: !!state.file,
   };
-} 
+}

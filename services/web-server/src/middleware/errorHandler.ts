@@ -18,6 +18,7 @@ export const errorHandler = (
   err: Error,
   _req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ): void => {
   let statusCode = 500;
@@ -36,8 +37,10 @@ export const errorHandler = (
   };
 
   // Log error for debugging
+  // eslint-disable-next-line no-console
   console.error(`[${errorResponse.timestamp}] ${statusCode} - ${message}`);
   if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
     console.error(err.stack);
   }
 
@@ -51,4 +54,4 @@ export const notFoundHandler = (
 ): void => {
   const error = new AppError(`Route ${req.originalUrl} not found`, 404);
   next(error);
-}; 
+};

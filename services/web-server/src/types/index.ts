@@ -16,7 +16,7 @@ export interface ImageUploadResponse {
   service: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -28,4 +28,4 @@ export interface ErrorResponse {
   message: string;
   statusCode: number;
   timestamp: string;
-} 
+}

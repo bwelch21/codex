@@ -1,6 +1,9 @@
-import { useState, useCallback } from 'react';
-import { uploadImage, ImageUploadError } from '../services/imageUpload';
-import type { ImageUploadResponse, UploadProgress } from '../services/imageUpload';
+import { useState, useCallback } from "react";
+import { uploadImage, ImageUploadError } from "../services/imageUpload";
+import type {
+  ImageUploadResponse,
+  UploadProgress,
+} from "../services/imageUpload";
 
 export interface ImageUploadState {
   isUploading: boolean;
@@ -36,7 +39,7 @@ export function useImageUpload(): ImageUploadHookReturn {
 
     try {
       const response = await uploadImage(file, (progress: UploadProgress) => {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           progress: progress.percentage,
         }));
@@ -49,8 +52,8 @@ export function useImageUpload(): ImageUploadHookReturn {
         error: null,
       });
     } catch (error) {
-      let errorMessage = 'An unexpected error occurred during upload.';
-      
+      let errorMessage = "An unexpected error occurred during upload.";
+
       if (error instanceof ImageUploadError) {
         errorMessage = error.message;
       } else if (error instanceof Error) {
@@ -80,4 +83,4 @@ export function useImageUpload(): ImageUploadHookReturn {
     uploadFile,
     resetUpload,
   };
-} 
+}

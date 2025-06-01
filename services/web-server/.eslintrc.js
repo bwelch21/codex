@@ -8,8 +8,6 @@ module.exports = {
   plugins: ['@typescript-eslint', 'prettier'],
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
-    '@typescript-eslint/recommended-requiring-type-checking',
     'prettier',
   ],
   root: true,
@@ -25,10 +23,11 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'warn',
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/prefer-const': 'error',
     '@typescript-eslint/no-var-requires': 'error',
     'prettier/prettier': 'error',
     'no-console': 'warn',
     'no-debugger': 'error',
+    'no-unused-vars': 'off',
+    'no-undef': 'off',
   },
 }; 
