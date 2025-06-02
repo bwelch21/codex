@@ -153,13 +153,10 @@ export function PhotoUpload({
     [disabled],
   );
 
-  const handleDragLeave = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      setIsDragOver(false);
-    },
-    [],
-  );
+  const handleDragLeave = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+  }, []);
 
   const openFileDialog = useCallback(() => {
     if (!disabled && fileInputRef.current) {

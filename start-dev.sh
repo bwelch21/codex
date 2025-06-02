@@ -86,8 +86,13 @@ echo ""
 echo "🎉 Development environment ready!"
 echo "🌍 Open http://localhost:5173 to view the application"
 echo ""
+echo "📜 Starting live log monitoring..."
 echo "To stop all services, run: ./stop-dev.sh"
-echo "To view logs: tail -f $LOGS_DIR/[service].log"
+echo "To view logs:"
+echo "tail -f $LOGS_DIR/web-server.log"
+echo "tail -f $LOGS_DIR/api.log"
+echo "tail -f $LOGS_DIR/frontend.log"
+echo ""
 
 # Store PIDs for cleanup script
 echo "$WEB_SERVER_PID" > "$PID_DIR/.dev-pids-web-server" 2>/dev/null || echo "⚠️  Could not store Web Server PID"
@@ -99,4 +104,3 @@ echo "$PID_DIR" > "$PID_DIR/.pid-dir-location" 2>/dev/null || true
 
 echo ""
 echo "📜 Services are running. Use Ctrl+C to stop or run ./stop-dev.sh"
-echo "📜 To follow logs: tail -f $LOGS_DIR/*.log" 

@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
 import { pingRoutes } from './routes/ping';
+import { menuRoutes } from './routes/menu';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 export function createApp(): Application {
@@ -46,6 +47,7 @@ export function createApp(): Application {
 
   // Routes
   app.use('/api', pingRoutes);
+  app.use('/api', menuRoutes);
 
   // Health check endpoint
   app.get('/health', (_req: Request, res: Response) => {
