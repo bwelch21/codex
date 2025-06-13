@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import { ApiResponse, MenuExtractionResponse, DetailedErrorResponse } from '../types';
+import {
+  ApiResponse,
+  MenuExtractionResponse,
+  DetailedErrorResponse,
+} from '../types';
 import { TextExtractionService } from '../services/textExtraction';
 
 const router = Router();
@@ -18,111 +22,151 @@ const upload = multer({
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.'));
+      cb(
+        new Error(
+          'Invalid file type. Only JPEG, PNG, and PDF files are allowed.'
+        )
+      );
     }
   },
 });
 
-router.post('/menu/extract-text', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
-  const startTime = Date.now();
-  
-  try {
-    // Check if file was uploaded
-    if (!req.file) {
+router.post(
+  '/menu/extract-text',
+  upload.single('file'),
+  async (req: Request, res: Response): Promise<void> => {
+    const startTime = Date.now();
+
+    // Set a timeout for the entire request
+    const timeout = setTimeout(() => {
       const errorResponse: ApiResponse<DetailedErrorResponse> = {
         success: false,
         error: {
-          message: 'No file uploaded. Please provide a JPEG, PNG, or PDF file.',
-          code: 'NO_FILE_UPLOADED',
-          timestamp: new Date().toISOString(),
-        },
-      };
-      res.status(400).json(errorResponse);
-      return;
-    }
-
-    const { file } = req;
-    
-    try {
-      // Extract text from the uploaded file
-      const extractedText = await textExtractionService.extractText(file.buffer, file.mimetype);
-      
-      // Process the extracted text into structured menu data
-      const processedData = textExtractionService.processMenuText(
-        extractedText.rawText, 
-        extractedText.confidence
-      );
-      
-      const processingTimeMs = Date.now() - startTime;
-      const extractionId = uuidv4();
-      
-      const response: MenuExtractionResponse = {
-        extractionId,
-        processedAt: new Date().toISOString(),
-        metadata: {
-          fileName: file.originalname,
-          fileType: file.mimetype,
-          fileSize: file.size,
-          processingTimeMs,
-        },
-        extractedContent: {
-          rawText: extractedText.rawText,
-          menuSections: processedData.menuSections,
-          confidence: processedData.confidence,
-          allergenAlerts: processedData.allergenAlerts,
-        },
-      };
-
-      const apiResponse: ApiResponse<MenuExtractionResponse> = {
-        success: true,
-        data: response,
-      };
-
-      res.status(200).json(apiResponse);
-      
-    } catch (extractionError) {
-      console.error('Text extraction failed:', extractionError);
-      
-      const errorResponse: ApiResponse<DetailedErrorResponse> = {
-        success: false,
-        error: {
-          message: 'Unable to extract text from the provided file.',
-          code: 'TEXT_EXTRACTION_FAILED',
+          message: 'Request timed out after 120 seconds',
+          code: 'REQUEST_TIMEOUT',
           timestamp: new Date().toISOString(),
           details: {
-            reason: extractionError instanceof Error ? extractionError.message : 'unknown_error',
+            timeoutMs: 120000,
             suggestions: [
-              'Ensure the file is not corrupted',
-              'Try a higher quality image',
-              'Check that the file contains readable text'
+              'Try with a smaller file',
+              'Check your network connection',
+              'Try again later'
+            ]
+          }
+        }
+      };
+      res.status(504).json(errorResponse);
+    }, 120000); // 120 second timeout
+
+    try {
+      // Check if file was uploaded
+      if (!req.file) {
+        clearTimeout(timeout);
+        const errorResponse: ApiResponse<DetailedErrorResponse> = {
+          success: false,
+          error: {
+            message:
+              'No file uploaded. Please provide a JPEG, PNG, or PDF file.',
+            code: 'NO_FILE_UPLOADED',
+            timestamp: new Date().toISOString(),
+          },
+        };
+        res.status(400).json(errorResponse);
+        return;
+      }
+
+      const { file } = req;
+
+      try {
+        // Extract relevant text sections from the uploaded file
+        const extractedSections = await textExtractionService.extractTextSections(
+          file.buffer,
+          file.mimetype
+        );
+
+        // Process the extracted text into structured menu data
+        const processedData = await textExtractionService.processMenuText(
+          extractedSections.textBoxes,
+          extractedSections.confidence
+        );
+
+        const processingTimeMs = Date.now() - startTime;
+        const extractionId = uuidv4();
+
+        const response: MenuExtractionResponse = {
+          extractionId,
+          processedAt: new Date().toISOString(),
+          metadata: {
+            fileName: file.originalname,
+            fileType: file.mimetype,
+            fileSize: file.size,
+            processingTimeMs,
+          },
+          extractedContent: {
+            rawText: extractedSections.textBoxes.join('\n\n'),
+            menuSections: processedData.menuSections,
+            confidence: processedData.confidence
+          },
+        };
+
+        const apiResponse: ApiResponse<MenuExtractionResponse> = {
+          success: true,
+          data: response,
+        };
+
+        clearTimeout(timeout);
+        res.status(200).json(apiResponse);
+      } catch (extractionError) {
+        clearTimeout(timeout);
+        console.error('Text extraction failed:', extractionError);
+
+        const errorResponse: ApiResponse<DetailedErrorResponse> = {
+          success: false,
+          error: {
+            message: 'Unable to extract text from the provided file.',
+            code: 'TEXT_EXTRACTION_FAILED',
+            timestamp: new Date().toISOString(),
+            details: {
+              reason:
+                extractionError instanceof Error
+                  ? extractionError.message
+                  : 'unknown_error',
+              suggestions: [
+                'Ensure the file is not corrupted',
+                'Try a higher quality image',
+                'Check that the file contains readable text',
+              ],
+            },
+          },
+        };
+
+        res.status(422).json(errorResponse);
+        return;
+      }
+    } catch (error) {
+      clearTimeout(timeout);
+      console.error('Menu extraction error:', error);
+
+      const errorResponse: ApiResponse<DetailedErrorResponse> = {
+        success: false,
+        error: {
+          message: 'An unexpected error occurred during file processing.',
+          code: 'PROCESSING_ERROR',
+          timestamp: new Date().toISOString(),
+          details: {
+            reason: 'server_error',
+            suggestions: [
+              'Try uploading the file again',
+              'Contact support if the issue persists',
             ],
           },
         },
       };
-      
-      res.status(422).json(errorResponse);
-      return;
+
+      res.status(500).json(errorResponse);
     }
-    
-  } catch (error) {
-    console.error('Menu extraction error:', error);
-    
-    const errorResponse: ApiResponse<DetailedErrorResponse> = {
-      success: false,
-      error: {
-        message: 'An unexpected error occurred during file processing.',
-        code: 'PROCESSING_ERROR',
-        timestamp: new Date().toISOString(),
-        details: {
-          reason: 'server_error',
-          suggestions: ['Try uploading the file again', 'Contact support if the issue persists'],
-        },
-      },
-    };
-    
-    res.status(500).json(errorResponse);
   }
-});
+);
 
 // Error handling for multer file upload errors
 router.use((error: any, req: Request, res: Response, next: any) => {
@@ -163,4 +207,4 @@ router.use((error: any, req: Request, res: Response, next: any) => {
   return next(error);
 });
 
-export { router as menuRoutes }; 
+export { router as menuRoutes };

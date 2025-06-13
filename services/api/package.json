@@ -6,15 +6,15 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules --watch src src/server.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "express",
@@ -37,9 +37,10 @@
     "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1",
     "pdf2pic": "^3.2.0",
-    "sharp": "^0.33.1",
-    "tesseract.js": "^6.0.1",
-    "uuid": "^11.1.0"
+    "sharp": "^0.33.5",
+    "uuid": "^11.1.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.32.1"
   },
   "devDependencies": {
     "@types/compression": "^1.7.5",
@@ -61,7 +62,9 @@
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3",
-    "typescript-eslint": "^8.33.0"
+    "typescript-eslint": "^8.33.0",
+    "vitest": "^1.2.0",
+    "@vitest/coverage-v8": "^1.2.0"
   },
   "engines": {
     "node": ">=18.0.0"
