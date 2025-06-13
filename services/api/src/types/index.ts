@@ -44,7 +44,6 @@ export interface MenuExtractionResponse {
       textQuality: number;
       structureDetection: number;
     };
-    allergenAlerts: AllergenAlert[];
   };
 }
 
@@ -74,12 +73,4 @@ export interface MenuItem {
     width: number;
     height: number;
   };
-}
-
-export interface AllergenAlert {
-  allergen: string;
-  confidence: number;
-  context: string;
-  menuItemId?: string;
-  severity: 'high' | 'medium' | 'low';
 }
