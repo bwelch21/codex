@@ -11,6 +11,88 @@ const openai = new OpenAI({
   maxRetries: 3
 });
 
+// LLM configuration ---------------------------------------------------------
+const LLM_MODEL = process.env.LLM_MENU_MODEL || 'gpt-4o-mini';
+
+/**
+ * Shape of the price object returned by the LLM.
+ */
+interface LLMPrice {
+  value: number;
+  currency?: string;
+  rawText?: string;
+}
+
+/**
+ * Shape of a single menu item returned by the LLM.
+ */
+interface LLMMenuItem {
+  name: string;
+  description?: string;
+  price?: LLMPrice;
+}
+
+/**
+ * Shape of a menu section returned by the LLM.
+ */
+interface LLMMenuSection {
+  title: string;
+  items: LLMMenuItem[];
+}
+
+/**
+ * Overall JSON response expected from the LLM.
+ */
+interface LLMMenuResponse {
+  sections: LLMMenuSection[];
+}
+
+/**
+ * Build the user message that will be sent to the LLM for a single raw
+ * text section. Extracted into its own function to keep business logic out
+ * of the service class and make the prompt easy to unit-test.
+ */
+function buildMenuPrompt(rawSection: string): string {
+  return `Parse this menu text into structured sections. For each menu item, identify the name, description, price, and any dietary information or allergen warnings. Your response must follow the JSON schema below exactly.\nRaw Menu Text:\n${rawSection}\n\nExpected JSON format:\n{\n  \"sections\": [\n    {\n      \"title\": \"section name\",\n      \"items\": [\n        {\n          \"name\": \"item name\",\n          \"description\": \"item description\",\n          \"price\": {\n            \"value\": number,\n            \"currency\": \"item price currency\",\n            \"rawText\": \"original price text\"\n          }\n        }\n      ]\n    }\n  ]\n}`;
+}
+
+/**
+ * Convert the LLM's JSON response to our internal MenuSection domain model.
+ */
+function mapLLMSectionsToDomain(sections: LLMMenuSection[]): MenuSection[] {
+  return sections.map((section) => {
+    const mappedItems = section.items.map((item) => {
+      let mappedItem: MenuSection['items'][number] = {
+        id: uuidv4(),
+        name: item.name,
+        confidence: 0.8, // TODO: Calculate dynamically.
+        position: { x: 0, y: 0, width: 0, height: 0 },
+      };
+
+      if (item.description) {
+        mappedItem.description = item.description;
+      }
+
+      if (item.price) {
+        mappedItem.price = {
+          value: Number(item.price.value),
+          currency: item.price.currency || 'USD',
+          rawText: item.price.rawText ?? '',
+        };
+      }
+
+      return mappedItem;
+    });
+
+    return {
+      id: uuidv4(),
+      title: section.title,
+      items: mappedItems,
+      confidence: 0.8, // TODO: Calculate dynamically.
+    };
+  });
+}
+
 export interface ExtractedTextSections {
   textBoxes: string[];
   confidence: number;
@@ -72,7 +154,7 @@ export class TextExtractionService {
       const result = await readMenuWithLLMBoxes(
         fileBuffer,
         { 
-          model: 'gpt-4o-mini',
+          model: LLM_MODEL,
           maxDimension: 1024,
           jpegQuality: 60,
           compressCrops: false,
@@ -125,41 +207,16 @@ export class TextExtractionService {
   private async parseMenuSections(textSections: string[]): Promise<MenuSection[]> {
     console.log('Starting LLM menu parsing from raw text sections');
 
-
     const menuSections = await Promise.all(textSections.map(async (section) => {
-
       try {
-      
         const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [{
           role: 'user',
-          content: `Parse this menu text into structured sections. For each menu item, identify the name, description, price, and any dietary information or allergen warnings. Your response should follow the JSON schema below exactly.
-            Raw Menu Text:
-            ${section}
-  
-            Expected JSON format:
-            {
-              "sections": [
-                {
-                  "title": "section name",
-                  "items": [
-                    {
-                      "name": "item name",
-                      "description": "item description",
-                      "price": {
-                        "value": number,
-                        "currency": "item price currency",
-                        "rawText": "original price text"
-                      },
-                    }
-                  ]
-                }
-              ]
-            }`
+          content: buildMenuPrompt(section)
         }];
   
         console.log('Sending request to OpenAI');
         const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: LLM_MODEL,
           messages,
           temperature: 0,
           max_tokens: 4000,
@@ -170,24 +227,7 @@ export class TextExtractionService {
         const parsedResponse = JSON.parse(response.choices[0]?.message?.content || '{"sections": []}');
         console.log('Parsed JSON response for section', JSON.stringify(parsedResponse, null, 2));
         
-        // Validate and transform the response
-        return parsedResponse.sections.map((section: any) => ({
-          id: uuidv4(),
-          title: section.title,
-          items: section.items?.map((item: any) => ({
-            id: uuidv4(),
-            name: item.name,
-            description: item.description,
-            price: item.price ? {
-              value: Number(item.price.value),
-              currency: item.price.currency || 'USD',
-              rawText: item.price.rawText
-            } : undefined,
-            confidence: 0.8, // TODO
-            position: { x: 0, y: 0, width: 0, height: 0 }
-          })),
-          confidence: 0.8
-        }));
+        return mapLLMSectionsToDomain((parsedResponse.sections ?? []) as LLMMenuSection[]);
       } catch (error) {
         console.error('Menu parsing error:', error);
         console.error('Unable to parse section:', section);
