@@ -75,24 +75,6 @@ async function _sendToOpenAI(
 }
 
 /**
- * Send a pre-built "content" array (text + one or more image_url objects) to the LLM.
- * Returns the raw string response.
- * @private
- */
-async function _sendContentToOpenAI(
-  content: any[],
-  { model }: { model: string }
-): Promise<string> {
-  const response = await openai.chat.completions.create({
-    model,
-    temperature: 0,
-    max_tokens: 4096,
-    messages: [{ role: 'user', content }],
-  });
-  return (response.choices[0]?.message?.content || '').trim();
-}
-
-/**
  * FAST path – aggressively compresses image before sending to LLM.
  * Reduces payload size 5-10× and speeds up request/latency.
  * @param {string | Buffer} imageInput - File path or Buffer containing the image data
