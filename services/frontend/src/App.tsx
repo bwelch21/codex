@@ -1,5 +1,5 @@
-import { PhotoUploadDemo } from "./components/pages/PhotoUploadDemo";
+import { SafeDishesAnalysis } from "./components/pages/SafeDishesAnalysis";
 
 export function App() {
-  return <PhotoUploadDemo />;
+  return <SafeDishesAnalysis />;
 }

@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 
 import { helloWorldRoutes } from './routes/helloWorld';
 import { imageUploadRoutes } from './routes/imageUpload';
+import { safeDishesRoutes } from './routes/safeDishes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 export function createApp(): Application {
@@ -48,6 +49,7 @@ export function createApp(): Application {
   // Routes
   app.use('/api', helloWorldRoutes);
   app.use('/api', imageUploadRoutes);
+  app.use('/api', safeDishesRoutes);
 
   // Health check endpoint
   app.get('/health', (_req: Request, res: Response) => {
