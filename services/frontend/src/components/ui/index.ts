@@ -1,4 +1,10 @@
 export { Button } from "./Button";
 export { PhotoUpload } from "./PhotoUpload";
+export { AllergenSelector } from './AllergenSelector';
+export { SafeDishesResults } from './safe-dishes-results';
+export { StickyScrollContentHeader } from './safe-dishes-results';
+export { ErrorModal } from './ErrorModal';
+export { StepCard } from './StepCard';
+export { DishSwipeDeck } from './DishSwipeDeck';
 export type { ButtonProps } from "./Button";
 export type { PhotoUploadProps, UploadState } from "./PhotoUpload";

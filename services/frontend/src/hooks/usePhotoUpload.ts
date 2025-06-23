@@ -12,6 +12,7 @@ export interface PhotoUploadHookReturn {
   handleFileSelect: (file: File | null) => void;
   clearFile: () => void;
   hasFile: boolean;
+  shouldClearComponent: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ export function usePhotoUpload(): PhotoUploadHookReturn {
     isUploaded: false,
     error: null,
   });
+  const [shouldClearComponent, setShouldClearComponent] = useState(false);
 
   const handleFileSelect = useCallback((file: File | null) => {
     if (file) {
@@ -66,6 +68,9 @@ export function usePhotoUpload(): PhotoUploadHookReturn {
       isUploaded: false,
       error: null,
     });
+    setShouldClearComponent(true);
+    // Reset the flag after a brief moment
+    setTimeout(() => setShouldClearComponent(false), 100);
   }, []);
 
   return {
@@ -73,5 +78,6 @@ export function usePhotoUpload(): PhotoUploadHookReturn {
     handleFileSelect,
     clearFile,
     hasFile: !!state.file,
+    shouldClearComponent,
   };
 }

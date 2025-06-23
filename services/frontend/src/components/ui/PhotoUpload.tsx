@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import { useDeviceDetection } from "../../hooks/useDeviceDetection";
 
@@ -7,6 +7,7 @@ export interface PhotoUploadProps {
   maxSizeInMB?: number;
   disabled?: boolean;
   className?: string;
+  shouldClear?: boolean; // New prop to trigger clearing
 }
 
 export interface UploadState {
@@ -30,6 +31,7 @@ export function PhotoUpload({
   maxSizeInMB = DEFAULT_MAX_SIZE_MB,
   disabled = false,
   className = "",
+  shouldClear = false,
 }: PhotoUploadProps) {
   const [state, setState] = useState<UploadState>({
     file: null,
@@ -42,6 +44,21 @@ export function PhotoUpload({
   const { isMobile, hasCamera } = useDeviceDetection();
 
   const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+
+  // Handle external clear requests
+  useEffect(() => {
+    if (shouldClear) {
+      setState({
+        file: null,
+        preview: null,
+        status: "idle",
+        error: null,
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [shouldClear]);
 
   const validateFile = useCallback(
     (file: File): string | null => {

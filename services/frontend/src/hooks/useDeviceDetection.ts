@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export interface DeviceDetection {
   isMobile: boolean;
@@ -12,34 +12,42 @@ export interface DeviceDetection {
  * @returns Object with device detection flags
  */
 export function useDeviceDetection(): DeviceDetection {
-  return useMemo(() => {
-    const userAgent = navigator.userAgent;
-
-    // Mobile device detection
-    const isMobile =
-      /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        userAgent,
-      );
-
-    // Tablet detection (more specific than mobile)
-    const isTablet =
-      /iPad|Android(?=.*\bMobile\b)(?=.*\bSafari\b)|Android(?=.*(?!.*Mobile).*Safari)/i.test(
-        userAgent,
-      );
-
-    // Desktop detection (anything that's not mobile or tablet)
-    const isDesktop = !isMobile && !isTablet;
-
-    // Camera capability detection (available on most mobile devices and some desktops)
-    const hasCamera =
-      isMobile ||
-      (navigator.mediaDevices && "getUserMedia" in navigator.mediaDevices);
-
-    return {
-      isMobile,
-      isTablet,
-      isDesktop,
-      hasCamera,
-    };
+  const initial = useMemo(() => {
+    const ua = navigator.userAgent;
+    const uaMobile = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const uaTablet = /iPad|Android(?=.*\bMobile\b)(?=.*\bSafari\b)|Android(?=.*(?!.*Mobile).*Safari)/i.test(ua);
+    return { uaMobile, uaTablet };
   }, []);
+
+  const getWidthBasedFlags = () => {
+    const width = window.innerWidth;
+    return {
+      widthMobile: width < 640,
+      widthTablet: width >= 640 && width < 1024,
+    };
+  };
+
+  const [responsiveFlags, setResponsiveFlags] = useState(getWidthBasedFlags());
+
+  useEffect(() => {
+    const handleResize = () => setResponsiveFlags(getWidthBasedFlags());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Prefer viewport-based flags for responsive behaviour
+  const isMobile = responsiveFlags.widthMobile;
+  const isTablet = responsiveFlags.widthTablet;
+  const isDesktop = !isMobile && !isTablet;
+
+  // Camera capability: use UA hint OR mediaDevices API
+  const hasCamera =
+    initial.uaMobile || (navigator.mediaDevices && 'getUserMedia' in navigator.mediaDevices);
+
+  return {
+    isMobile,
+    isTablet,
+    isDesktop,
+    hasCamera,
+  };
 }
