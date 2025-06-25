@@ -1,0 +1,73 @@
+service: codex
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        # webServer may invoke internal lambdas
+        - Effect: Allow
+          Action: lambda:InvokeFunction
+          Resource: arn:aws:lambda:us-east-1:*:function:api-*
+
+# Reduce Lambda bundle size – bundle each function separately and omit dev deps
+package:
+  individually: true
+  excludeDevDependencies: true
+
+functions:
+  webServer:
+    handler: services/web-server/dist/handler.handler
+    memorySize: 512
+    events:
+      - httpApi:             # public
+          method: ANY
+          path: /{proxy+}
+    environment:
+      INTERNAL_API_PING_FN: ${self:service}-apiPing
+    # Include only the transpiled code and production dependencies to stay well
+    # under the 250 MB unzipped Lambda limit.
+    package:
+      patterns:
+        - '!**'                                 # start with nothing
+        - services/web-server/dist/**           # compiled JS/TS output
+        - services/web-server/package.json
+        - services/web-server/node_modules/**   # runtime deps
+        - '!services/web-server/node_modules/aws-sdk/**'  # AWS SDK v2 already available in runtime
+        # exclude misc files that bloat size
+        - '!**/*.map'
+        - '!**/test{,s}/**'
+        - '!**/__tests__/**'
+        - '!**/*.md'
+
+  apiPing:                  # PRIVATE – no httpApi event
+    handler: services/api/dist/handlers/ping.handler
+    name: ${self:service}-apiPing
+    memorySize: 512
+    # Include only the transpiled code and production dependencies to stay well
+    # under the 250 MB unzipped Lambda limit.
+    package:
+      patterns:
+        - '!**'                                 # start with nothing
+        - services/api/dist/**           # compiled JS/TS output
+        - services/api/package.json
+        - services/api/node_modules/**   # runtime deps
+        # exclude misc files that bloat size
+        - '!**/*.map'
+        - '!**/test{,s}/**'
+        - '!**/__tests__/**'
+        - '!**/*.md'
+        - '!**/testFixtures/**'
+
+resources:
+  Resources:
+    ApiPingInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref ApiPingLambdaFunction
+        Action: lambda:InvokeFunction
+        Principal: lambda.amazonaws.com
+        SourceArn: !GetAtt WebServerLambdaFunction.Arn

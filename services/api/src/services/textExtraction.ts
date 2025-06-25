@@ -41,13 +41,6 @@ interface LLMMenuSection {
 }
 
 /**
- * Overall JSON response expected from the LLM.
- */
-interface LLMMenuResponse {
-  sections: LLMMenuSection[];
-}
-
-/**
  * Build the user message that will be sent to the LLM for a single raw
  * text section. Extracted into its own function to keep business logic out
  * of the service class and make the prompt easy to unit-test.

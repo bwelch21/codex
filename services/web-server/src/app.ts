@@ -10,8 +10,10 @@ import { imageUploadRoutes } from './routes/imageUpload';
 import { safeDishesRoutes } from './routes/safeDishes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
-export function createApp(): Application {
-  const app: Application = express();
+export function createApp(existingApp?: Application): Application {
+  // Use the provided Express application if available so that callers can
+  // register routes *before* the common middleware/404 handler are attached.
+  const app: Application = existingApp ?? express();
 
   // Security middleware
   app.use(helmet());

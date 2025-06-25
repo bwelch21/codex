@@ -1,7 +1,7 @@
 {
-  "name": "@food-allergy-assistant/frontend",
+  "name": "@codex/frontend",
   "version": "1.0.0",
-  "description": "React frontend for food allergy assistant",
+  "description": "React frontend for the Codex food allergy assistant",
   "type": "module",
   "scripts": {
     "dev": "vite",

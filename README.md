@@ -74,7 +74,7 @@ This project is organized as a monorepo with three main services that work toget
 1. **Clone and navigate to the project**:
    ```bash
    git clone <repository-url>
-   cd food-allergy-assistant
+   cd codex
    ```
 
 2. **Use the correct Node.js version**:
