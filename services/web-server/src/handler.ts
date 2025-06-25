@@ -11,8 +11,8 @@ const lambdaClient = new LambdaClient({});
 app.get('/internal/ping', async (_req, res) => {
   const out = await lambdaClient.send(
     new InvokeCommand({
-      FunctionName: process.env.INTERNAL_API_PING_FN,
-      Payload: Buffer.from(JSON.stringify({})),
+      FunctionName: process.env.INTERNAL_API_SERVICE_FN,
+      Payload: Buffer.from(JSON.stringify({ action: 'ping' })),
     })
   );
   res.json(JSON.parse(Buffer.from(out.Payload!).toString()));

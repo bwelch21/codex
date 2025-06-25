@@ -11,7 +11,8 @@ provider:
         # webServer may invoke internal lambdas
         - Effect: Allow
           Action: lambda:InvokeFunction
-          Resource: arn:aws:lambda:us-east-1:*:function:api-*
+          Resource:
+            Fn::Sub: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${opt:stage, 'dev'}-apiService
 
 # Reduce Lambda bundle size – bundle each function separately and omit dev deps
 package:
@@ -21,13 +22,14 @@ package:
 functions:
   webServer:
     handler: services/web-server/dist/handler.handler
+    name: ${self:service}-${opt:stage, 'dev'}-webServer
     memorySize: 512
     events:
       - httpApi:             # public
           method: ANY
           path: /{proxy+}
     environment:
-      INTERNAL_API_PING_FN: ${self:service}-apiPing
+      INTERNAL_API_SERVICE_FN: ${self:service}-${opt:stage, 'dev'}-apiService
     # Include only the transpiled code and production dependencies to stay well
     # under the 250 MB unzipped Lambda limit.
     package:
@@ -36,16 +38,16 @@ functions:
         - services/web-server/dist/**           # compiled JS/TS output
         - services/web-server/package.json
         - services/web-server/node_modules/**   # runtime deps
-        - '!services/web-server/node_modules/aws-sdk/**'  # AWS SDK v2 already available in runtime
+        - node_modules/**
         # exclude misc files that bloat size
         - '!**/*.map'
         - '!**/test{,s}/**'
         - '!**/__tests__/**'
         - '!**/*.md'
 
-  apiPing:                  # PRIVATE – no httpApi event
-    handler: services/api/dist/handlers/ping.handler
-    name: ${self:service}-apiPing
+  apiService:                  # PRIVATE – no httpApi event
+    handler: services/api/dist/handler.handler
+    name: ${self:service}-${opt:stage, 'dev'}-apiService
     memorySize: 512
     # Include only the transpiled code and production dependencies to stay well
     # under the 250 MB unzipped Lambda limit.
@@ -64,10 +66,10 @@ functions:
 
 resources:
   Resources:
-    ApiPingInvokePermission:
+    ApiServiceInvokePermission:
       Type: AWS::Lambda::Permission
       Properties:
-        FunctionName: !Ref ApiPingLambdaFunction
+        FunctionName: !Ref ApiServiceLambdaFunction
         Action: lambda:InvokeFunction
         Principal: lambda.amazonaws.com
         SourceArn: !GetAtt WebServerLambdaFunction.Arn

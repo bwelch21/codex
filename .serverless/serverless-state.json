@@ -16,7 +16,9 @@
               "Action": [
                 "lambda:InvokeFunction"
               ],
-              "Resource": "arn:aws:lambda:us-east-1:*:function:api-*"
+              "Resource": {
+                "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:codex-prod-apiService"
+              }
             }
           ]
         }
@@ -33,10 +35,10 @@
               "LogGroupName": "/aws/lambda/codex-prod-webServer"
             }
           },
-          "ApiPingLogGroup": {
+          "ApiServiceLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/codex-apiPing"
+              "LogGroupName": "/aws/lambda/codex-prod-apiService"
             }
           },
           "IamRoleLambdaExecution": {
@@ -82,9 +84,6 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*"
-                          },
-                          {
                             "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*"
                           }
                         ]
@@ -95,9 +94,6 @@
                           "logs:PutLogEvents"
                         ],
                         "Resource": [
-                          {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*:*"
-                          },
                           {
                             "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*:*"
                           }
@@ -131,7 +127,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
-                "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/webServer.zip"
+                "S3Key": "serverless/codex/prod/1750884901371-2025-06-25T20:55:01.371Z/webServer.zip"
               },
               "Handler": "services/web-server/dist/handler.handler",
               "Runtime": "nodejs18.x",
@@ -140,7 +136,7 @@
               "Timeout": 6,
               "Environment": {
                 "Variables": {
-                  "INTERNAL_API_PING_FN": "codex-apiPing"
+                  "INTERNAL_API_SERVICE_FN": "codex-prod-apiService"
                 }
               },
               "Role": {
@@ -154,16 +150,16 @@
               "WebServerLogGroup"
             ]
           },
-          "ApiPingLambdaFunction": {
+          "ApiServiceLambdaFunction": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
-                "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/apiPing.zip"
+                "S3Key": "serverless/codex/prod/1750884901371-2025-06-25T20:55:01.371Z/apiService.zip"
               },
-              "Handler": "services/api/dist/handlers/ping.handler",
+              "Handler": "services/api/dist/handler.handler",
               "Runtime": "nodejs18.x",
-              "FunctionName": "codex-apiPing",
+              "FunctionName": "codex-prod-apiService",
               "MemorySize": 512,
               "Timeout": 6,
               "Role": {
@@ -174,27 +170,27 @@
               }
             },
             "DependsOn": [
-              "ApiPingLogGroup"
+              "ApiServiceLogGroup"
             ]
           },
-          "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE": {
+          "ApiServiceLambdaVersionlhQ9sP7O5NlFkoC5DTJiAFBEfspbh27dFoL5uHAzA": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ApiServiceLambdaFunction"
+              },
+              "CodeSha256": "KVEASxW58p2KA1TpYOD1Dcs565Daoq+jLzd1cyLJdy4="
+            }
+          },
+          "WebServerLambdaVersionqyPAkCFkQI84PoGufAKPwL0uNqHjCxFtBVjcXpg": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "WebServerLambdaFunction"
               },
-              "CodeSha256": "JDY3nbczUkVSD5kDjK9WcjXPzT3ubKmejnb8LEYuJfc="
-            }
-          },
-          "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4": {
-            "Type": "AWS::Lambda::Version",
-            "DeletionPolicy": "Retain",
-            "Properties": {
-              "FunctionName": {
-                "Ref": "ApiPingLambdaFunction"
-              },
-              "CodeSha256": "6EQHP/dC3XsX3BDbtuM3GPnGzhUJPZVaOcvLIHAbW1g="
+              "CodeSha256": "5Ye+y0+SrP8nhhRzgt/csVfsDKldyyuNzpL/LFZvW34="
             }
           },
           "HttpApi": {
@@ -289,11 +285,11 @@
             },
             "DependsOn": "HttpApiIntegrationWebServer"
           },
-          "ApiPingInvokePermission": {
+          "ApiServiceInvokePermission": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
               "FunctionName": {
-                "Ref": "ApiPingLambdaFunction"
+                "Ref": "ApiServiceLambdaFunction"
               },
               "Action": "lambda:InvokeFunction",
               "Principal": "lambda.amazonaws.com",
@@ -313,22 +309,22 @@
               "Name": "sls-codex-prod-ServerlessDeploymentBucketName"
             }
           },
+          "ApiServiceLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ApiServiceLambdaVersionlhQ9sP7O5NlFkoC5DTJiAFBEfspbh27dFoL5uHAzA"
+            },
+            "Export": {
+              "Name": "sls-codex-prod-ApiServiceLambdaFunctionQualifiedArn"
+            }
+          },
           "WebServerLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE"
+              "Ref": "WebServerLambdaVersionqyPAkCFkQI84PoGufAKPwL0uNqHjCxFtBVjcXpg"
             },
             "Export": {
               "Name": "sls-codex-prod-WebServerLambdaFunctionQualifiedArn"
-            }
-          },
-          "ApiPingLambdaFunctionQualifiedArn": {
-            "Description": "Current Lambda function version",
-            "Value": {
-              "Ref": "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4"
-            },
-            "Export": {
-              "Name": "sls-codex-prod-ApiPingLambdaFunctionQualifiedArn"
             }
           },
           "HttpApiId": {
@@ -373,6 +369,7 @@
     "functions": {
       "webServer": {
         "handler": "services/web-server/dist/handler.handler",
+        "name": "codex-prod-webServer",
         "memorySize": 512,
         "events": [
           {
@@ -385,7 +382,7 @@
           }
         ],
         "environment": {
-          "INTERNAL_API_PING_FN": "codex-apiPing"
+          "INTERNAL_API_SERVICE_FN": "codex-prod-apiService"
         },
         "package": {
           "patterns": [
@@ -393,7 +390,7 @@
             "services/web-server/dist/**",
             "services/web-server/package.json",
             "services/web-server/node_modules/**",
-            "!services/web-server/node_modules/aws-sdk/**",
+            "node_modules/**",
             "!**/*.map",
             "!**/test{,s}/**",
             "!**/__tests__/**",
@@ -401,16 +398,15 @@
           ],
           "artifact": ".serverless/webServer.zip"
         },
-        "name": "codex-prod-webServer",
         "memory": 512,
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE"
+        "versionLogicalId": "WebServerLambdaVersionqyPAkCFkQI84PoGufAKPwL0uNqHjCxFtBVjcXpg"
       },
-      "apiPing": {
-        "handler": "services/api/dist/handlers/ping.handler",
-        "name": "codex-apiPing",
+      "apiService": {
+        "handler": "services/api/dist/handler.handler",
+        "name": "codex-prod-apiService",
         "memorySize": 512,
         "package": {
           "patterns": [
@@ -424,23 +420,23 @@
             "!**/*.md",
             "!**/testFixtures/**"
           ],
-          "artifact": ".serverless/apiPing.zip"
+          "artifact": ".serverless/apiService.zip"
         },
         "events": [],
         "memory": 512,
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4"
+        "versionLogicalId": "ApiServiceLambdaVersionlhQ9sP7O5NlFkoC5DTJiAFBEfspbh27dFoL5uHAzA"
       }
     },
     "resources": {
       "Resources": {
-        "ApiPingInvokePermission": {
+        "ApiServiceInvokePermission": {
           "Type": "AWS::Lambda::Permission",
           "Properties": {
             "FunctionName": {
-              "Ref": "ApiPingLambdaFunction"
+              "Ref": "ApiServiceLambdaFunction"
             },
             "Action": "lambda:InvokeFunction",
             "Principal": "lambda.amazonaws.com",
@@ -468,7 +464,7 @@
         "excludeDevDependencies": true,
         "artifactsS3KeyDirname": "serverless/codex/prod/code-artifacts",
         "deploymentBucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
-        "artifactDirectoryName": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z"
+        "artifactDirectoryName": "serverless/codex/prod/1750884901371-2025-06-25T20:55:01.371Z"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
@@ -483,7 +479,7 @@
   },
   "package": {
     "individually": true,
-    "artifactDirectoryName": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z",
+    "artifactDirectoryName": "serverless/codex/prod/1750884901371-2025-06-25T20:55:01.371Z",
     "artifact": ""
   }
 }
