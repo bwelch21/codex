@@ -15,7 +15,7 @@ export const SelectedAllergensDisplay: React.FC<SelectedAllergensDisplayProps> =
     <div
       style={{
         backgroundColor: theme.colors.error[50],
-        padding: theme.spacing[4],
+        padding: theme.spacing[2],
         borderRadius: theme.borderRadius.lg,
         border: `1px solid ${theme.colors.error[200]}`,
         marginBottom: theme.spacing[2],
@@ -25,7 +25,7 @@ export const SelectedAllergensDisplay: React.FC<SelectedAllergensDisplayProps> =
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: theme.spacing[2],
+          gap: theme.spacing[1],
         }}
       >
         <h3
@@ -36,12 +36,10 @@ export const SelectedAllergensDisplay: React.FC<SelectedAllergensDisplayProps> =
             display: 'flex',
           }}
         >
-          <span style={{ marginRight: theme.spacing[2] }}>🚫</span>
+          <span style={{ marginRight: theme.spacing[1] }}>🚫</span>
           Avoiding These Allergens:
         </h3>
-        {selectedAllergens.map(a => (
           <span
-            key={a.id}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -50,9 +48,8 @@ export const SelectedAllergensDisplay: React.FC<SelectedAllergensDisplayProps> =
               fontWeight: theme.typography.fontWeight.medium
             }}
           >
-            {a.displayName}
+            {selectedAllergens.map(a => a.displayName).join(', ')}
           </span>
-        ))}
       </div>
     </div>
   );
