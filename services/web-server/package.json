@@ -1,7 +1,7 @@
 {
-  "name": "@food-allergy-assistant/web-server",
+  "name": "@codex/web-server",
   "version": "1.0.0",
-  "description": "Public-facing web server for food allergy assistant",
+  "description": "Public-facing web server for the Codex food allergy assistant",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
@@ -21,7 +21,8 @@
     "typescript",
     "web-server",
     "node",
-    "food-allergy"
+    "food-allergy",
+    "codex"
   ],
   "author": "",
   "license": "MIT",

@@ -1,0 +1,1255 @@
+{
+  "/Users/bwelch/Projects/Clearplate/codex/serverless.yml": {
+    "versionFramework": "4.17.1",
+    "servicePath": "/Users/bwelch/Projects/Clearplate/codex/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "codex",
+      "frameworkVersion": "4",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "us-east-1",
+        "iam": {
+          "role": {
+            "statements": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "lambda:InvokeFunction"
+                ],
+                "Resource": "arn:aws:lambda:us-east-1:*:function:api-*"
+              }
+            ]
+          }
+        },
+        "stage": "prod",
+        "versionFunctions": true,
+        "compiledCloudFormationTemplate": {
+          "AWSTemplateFormatVersion": "2010-09-09",
+          "Description": "The AWS CloudFormation template for this Serverless application",
+          "Resources": {
+            "WebServerLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/codex-prod-webServer"
+              }
+            },
+            "ApiPingLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/codex-apiPing"
+              }
+            },
+            "IamRoleLambdaExecution": {
+              "Type": "AWS::IAM::Role",
+              "Properties": {
+                "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": [
+                          "lambda.amazonaws.com"
+                        ]
+                      },
+                      "Action": [
+                        "sts:AssumeRole"
+                      ]
+                    }
+                  ]
+                },
+                "Policies": [
+                  {
+                    "PolicyName": {
+                      "Fn::Join": [
+                        "-",
+                        [
+                          "codex",
+                          "prod",
+                          "lambda"
+                        ]
+                      ]
+                    },
+                    "PolicyDocument": {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:CreateLogStream",
+                            "logs:CreateLogGroup",
+                            "logs:TagResource"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*"
+                            },
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:PutLogEvents"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*:*"
+                            },
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "lambda:InvokeFunction"
+                          ],
+                          "Resource": "arn:aws:lambda:us-east-1:*:function:api-*"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "Path": "/",
+                "RoleName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "codex",
+                      "prod",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "lambdaRole"
+                    ]
+                  ]
+                }
+              }
+            },
+            "WebServerLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+                  "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/webServer.zip"
+                },
+                "Handler": "services/web-server/dist/handler.handler",
+                "Runtime": "nodejs18.x",
+                "FunctionName": "codex-prod-webServer",
+                "MemorySize": 512,
+                "Timeout": 6,
+                "Environment": {
+                  "Variables": {
+                    "INTERNAL_API_PING_FN": "codex-apiPing"
+                  }
+                },
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleLambdaExecution",
+                    "Arn"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "WebServerLogGroup"
+              ]
+            },
+            "ApiPingLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+                  "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/apiPing.zip"
+                },
+                "Handler": "services/api/dist/handlers/ping.handler",
+                "Runtime": "nodejs18.x",
+                "FunctionName": "codex-apiPing",
+                "MemorySize": 512,
+                "Timeout": 6,
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleLambdaExecution",
+                    "Arn"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "ApiPingLogGroup"
+              ]
+            },
+            "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE": {
+              "Type": "AWS::Lambda::Version",
+              "DeletionPolicy": "Retain",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "WebServerLambdaFunction"
+                },
+                "CodeSha256": "JDY3nbczUkVSD5kDjK9WcjXPzT3ubKmejnb8LEYuJfc="
+              }
+            },
+            "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4": {
+              "Type": "AWS::Lambda::Version",
+              "DeletionPolicy": "Retain",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "ApiPingLambdaFunction"
+                },
+                "CodeSha256": "6EQHP/dC3XsX3BDbtuM3GPnGzhUJPZVaOcvLIHAbW1g="
+              }
+            },
+            "HttpApi": {
+              "Type": "AWS::ApiGatewayV2::Api",
+              "Properties": {
+                "Name": "prod-codex",
+                "ProtocolType": "HTTP"
+              }
+            },
+            "HttpApiStage": {
+              "Type": "AWS::ApiGatewayV2::Stage",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "StageName": "$default",
+                "AutoDeploy": true,
+                "DefaultRouteSettings": {
+                  "DetailedMetricsEnabled": false
+                }
+              }
+            },
+            "WebServerLambdaPermissionHttpApi": {
+              "Type": "AWS::Lambda::Permission",
+              "Properties": {
+                "FunctionName": {
+                  "Fn::GetAtt": [
+                    "WebServerLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":execute-api:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":",
+                      {
+                        "Ref": "HttpApi"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              }
+            },
+            "HttpApiIntegrationWebServer": {
+              "Type": "AWS::ApiGatewayV2::Integration",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "IntegrationType": "AWS_PROXY",
+                "IntegrationUri": {
+                  "Fn::GetAtt": [
+                    "WebServerLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "PayloadFormatVersion": "2.0",
+                "TimeoutInMillis": 30000
+              }
+            },
+            "HttpApiRouteAnyProxyVar": {
+              "Type": "AWS::ApiGatewayV2::Route",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "RouteKey": "ANY /{proxy+}",
+                "Target": {
+                  "Fn::Join": [
+                    "/",
+                    [
+                      "integrations",
+                      {
+                        "Ref": "HttpApiIntegrationWebServer"
+                      }
+                    ]
+                  ]
+                }
+              },
+              "DependsOn": "HttpApiIntegrationWebServer"
+            },
+            "ApiPingInvokePermission": {
+              "Type": "AWS::Lambda::Permission",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "ApiPingLambdaFunction"
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "lambda.amazonaws.com",
+                "SourceArn": {
+                  "Fn::GetAtt": [
+                    "WebServerLambdaFunction",
+                    "Arn"
+                  ]
+                }
+              }
+            }
+          },
+          "Outputs": {
+            "ServerlessDeploymentBucketName": {
+              "Value": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+              "Export": {
+                "Name": "sls-codex-prod-ServerlessDeploymentBucketName"
+              }
+            },
+            "WebServerLambdaFunctionQualifiedArn": {
+              "Description": "Current Lambda function version",
+              "Value": {
+                "Ref": "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE"
+              },
+              "Export": {
+                "Name": "sls-codex-prod-WebServerLambdaFunctionQualifiedArn"
+              }
+            },
+            "ApiPingLambdaFunctionQualifiedArn": {
+              "Description": "Current Lambda function version",
+              "Value": {
+                "Ref": "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4"
+              },
+              "Export": {
+                "Name": "sls-codex-prod-ApiPingLambdaFunctionQualifiedArn"
+              }
+            },
+            "HttpApiId": {
+              "Description": "Id of the HTTP API",
+              "Value": {
+                "Ref": "HttpApi"
+              },
+              "Export": {
+                "Name": "sls-codex-prod-HttpApiId"
+              }
+            },
+            "HttpApiUrl": {
+              "Description": "URL of the HTTP API",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "https://",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    ".execute-api.",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ".",
+                    {
+                      "Ref": "AWS::URLSuffix"
+                    }
+                  ]
+                ]
+              },
+              "Export": {
+                "Name": "sls-codex-prod-HttpApiUrl"
+              }
+            }
+          }
+        },
+        "vpc": {}
+      },
+      "package": {
+        "individually": true,
+        "excludeDevDependencies": true,
+        "artifactsS3KeyDirname": "serverless/codex/prod/code-artifacts",
+        "deploymentBucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+        "artifactDirectoryName": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z"
+      },
+      "functions": {
+        "webServer": {
+          "handler": "services/web-server/dist/handler.handler",
+          "memorySize": 512,
+          "events": [
+            {
+              "httpApi": {
+                "method": "ANY",
+                "path": "/{proxy+}"
+              },
+              "resolvedMethod": "ANY",
+              "resolvedPath": "/{proxy+}"
+            }
+          ],
+          "environment": {
+            "INTERNAL_API_PING_FN": "codex-apiPing"
+          },
+          "package": {
+            "patterns": [
+              "!**",
+              "services/web-server/dist/**",
+              "services/web-server/package.json",
+              "services/web-server/node_modules/**",
+              "!services/web-server/node_modules/aws-sdk/**",
+              "!**/*.map",
+              "!**/test{,s}/**",
+              "!**/__tests__/**",
+              "!**/*.md"
+            ],
+            "artifact": ".serverless/webServer.zip"
+          },
+          "name": "codex-prod-webServer",
+          "memory": 512,
+          "timeout": 6,
+          "runtime": "nodejs18.x",
+          "vpc": {},
+          "versionLogicalId": "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE"
+        },
+        "apiPing": {
+          "handler": "services/api/dist/handlers/ping.handler",
+          "name": "codex-apiPing",
+          "memorySize": 512,
+          "package": {
+            "patterns": [
+              "!**",
+              "services/api/dist/**",
+              "services/api/package.json",
+              "services/api/node_modules/**",
+              "!**/*.map",
+              "!**/test{,s}/**",
+              "!**/__tests__/**",
+              "!**/*.md",
+              "!**/testFixtures/**"
+            ],
+            "artifact": ".serverless/apiPing.zip"
+          },
+          "events": [],
+          "memory": 512,
+          "timeout": 6,
+          "runtime": "nodejs18.x",
+          "vpc": {},
+          "versionLogicalId": "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4"
+        }
+      },
+      "resources": {
+        "Resources": {
+          "ApiPingInvokePermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ApiPingLambdaFunction"
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "lambda.amazonaws.com",
+              "SourceArn": {
+                "Fn::GetAtt": [
+                  "WebServerLambdaFunction",
+                  "Arn"
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {}
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-east-1",
+      "iam": {
+        "role": {
+          "statements": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:InvokeFunction"
+              ],
+              "Resource": "arn:aws:lambda:us-east-1:*:function:api-*"
+            }
+          ]
+        }
+      },
+      "stage": "prod",
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "WebServerLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/codex-prod-webServer"
+            }
+          },
+          "ApiPingLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/codex-apiPing"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "codex",
+                        "prod",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "lambda:InvokeFunction"
+                        ],
+                        "Resource": "arn:aws:lambda:us-east-1:*:function:api-*"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "codex",
+                    "prod",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "WebServerLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+                "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/webServer.zip"
+              },
+              "Handler": "services/web-server/dist/handler.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "codex-prod-webServer",
+              "MemorySize": 512,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "INTERNAL_API_PING_FN": "codex-apiPing"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "WebServerLogGroup"
+            ]
+          },
+          "ApiPingLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+                "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/apiPing.zip"
+              },
+              "Handler": "services/api/dist/handlers/ping.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "codex-apiPing",
+              "MemorySize": 512,
+              "Timeout": 6,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "ApiPingLogGroup"
+            ]
+          },
+          "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "WebServerLambdaFunction"
+              },
+              "CodeSha256": "JDY3nbczUkVSD5kDjK9WcjXPzT3ubKmejnb8LEYuJfc="
+            }
+          },
+          "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ApiPingLambdaFunction"
+              },
+              "CodeSha256": "6EQHP/dC3XsX3BDbtuM3GPnGzhUJPZVaOcvLIHAbW1g="
+            }
+          },
+          "HttpApi": {
+            "Type": "AWS::ApiGatewayV2::Api",
+            "Properties": {
+              "Name": "prod-codex",
+              "ProtocolType": "HTTP"
+            }
+          },
+          "HttpApiStage": {
+            "Type": "AWS::ApiGatewayV2::Stage",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "StageName": "$default",
+              "AutoDeploy": true,
+              "DefaultRouteSettings": {
+                "DetailedMetricsEnabled": false
+              }
+            }
+          },
+          "WebServerLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "WebServerLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationWebServer": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "Fn::GetAtt": [
+                  "WebServerLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteAnyProxyVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "ANY /{proxy+}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationWebServer"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationWebServer"
+          },
+          "ApiPingInvokePermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ApiPingLambdaFunction"
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "lambda.amazonaws.com",
+              "SourceArn": {
+                "Fn::GetAtt": [
+                  "WebServerLambdaFunction",
+                  "Arn"
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+            "Export": {
+              "Name": "sls-codex-prod-ServerlessDeploymentBucketName"
+            }
+          },
+          "WebServerLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE"
+            },
+            "Export": {
+              "Name": "sls-codex-prod-WebServerLambdaFunctionQualifiedArn"
+            }
+          },
+          "ApiPingLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4"
+            },
+            "Export": {
+              "Name": "sls-codex-prod-ApiPingLambdaFunctionQualifiedArn"
+            }
+          },
+          "HttpApiId": {
+            "Description": "Id of the HTTP API",
+            "Value": {
+              "Ref": "HttpApi"
+            },
+            "Export": {
+              "Name": "sls-codex-prod-HttpApiId"
+            }
+          },
+          "HttpApiUrl": {
+            "Description": "URL of the HTTP API",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  }
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-codex-prod-HttpApiUrl"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "service: codex\nframeworkVersion: '4'\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  iam:\n    role:\n      statements:\n        # webServer may invoke internal lambdas\n        - Effect: Allow\n          Action: lambda:InvokeFunction\n          Resource: arn:aws:lambda:us-east-1:*:function:api-*\n\n# Reduce Lambda bundle size – bundle each function separately and omit dev deps\npackage:\n  individually: true\n  excludeDevDependencies: true\n\nfunctions:\n  webServer:\n    handler: services/web-server/dist/handler.handler\n    memorySize: 512\n    events:\n      - httpApi:             # public\n          method: ANY\n          path: /{proxy+}\n    environment:\n      INTERNAL_API_PING_FN: ${self:service}-apiPing\n    # Include only the transpiled code and production dependencies to stay well\n    # under the 250 MB unzipped Lambda limit.\n    package:\n      patterns:\n        - '!**'                                 # start with nothing\n        - services/web-server/dist/**           # compiled JS/TS output\n        - services/web-server/package.json\n        - services/web-server/node_modules/**   # runtime deps\n        - '!services/web-server/node_modules/aws-sdk/**'  # AWS SDK v2 already available in runtime\n        # exclude misc files that bloat size\n        - '!**/*.map'\n        - '!**/test{,s}/**'\n        - '!**/__tests__/**'\n        - '!**/*.md'\n\n  apiPing:                  # PRIVATE – no httpApi event\n    handler: services/api/dist/handlers/ping.handler\n    name: ${self:service}-apiPing\n    memorySize: 512\n    # Include only the transpiled code and production dependencies to stay well\n    # under the 250 MB unzipped Lambda limit.\n    package:\n      patterns:\n        - '!**'                                 # start with nothing\n        - services/api/dist/**           # compiled JS/TS output\n        - services/api/package.json\n        - services/api/node_modules/**   # runtime deps\n        # exclude misc files that bloat size\n        - '!**/*.map'\n        - '!**/test{,s}/**'\n        - '!**/__tests__/**'\n        - '!**/*.md'\n        - '!**/testFixtures/**'\n\nresources:\n  Resources:\n    ApiPingInvokePermission:\n      Type: AWS::Lambda::Permission\n      Properties:\n        FunctionName: !Ref ApiPingLambdaFunction\n        Action: lambda:InvokeFunction\n        Principal: lambda.amazonaws.com\n        SourceArn: !GetAtt WebServerLambdaFunction.Arn\n",
+    "command": [
+      "deploy"
+    ],
+    "options": {
+      "stage": "prod"
+    },
+    "orgId": "1256de49-193d-442c-8f5d-e98a2bca9546",
+    "orgName": "clearplate",
+    "userId": "XBMxvCGhDkHlhQnDyr",
+    "userName": "clearplate",
+    "serviceProviderAwsAccountId": "950615634526",
+    "serviceProviderAwsCfStackName": "codex-prod",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:950615634526:stack/codex-prod/84274fc0-51d8-11f0-925b-0e2cf6963599",
+    "serviceProviderAwsCfStackCreated": "2025-06-25T15:24:42.175Z",
+    "serviceProviderAwsCfStackUpdated": "2025-06-25T19:12:55.718Z",
+    "serviceProviderAwsCfStackStatus": "UPDATE_ROLLBACK_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "ApiPingLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:950615634526:function:codex-apiPing:4",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-codex-prod-ApiPingLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "WebServerLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:950615634526:function:codex-prod-webServer:4",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-codex-prod-WebServerLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "HttpApiId",
+        "OutputValue": "5gwa80grvh",
+        "Description": "Id of the HTTP API",
+        "ExportName": "sls-codex-prod-HttpApiId"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+        "ExportName": "sls-codex-prod-ServerlessDeploymentBucketName"
+      },
+      {
+        "OutputKey": "HttpApiUrl",
+        "OutputValue": "https://5gwa80grvh.execute-api.us-east-1.amazonaws.com",
+        "Description": "URL of the HTTP API",
+        "ExportName": "sls-codex-prod-HttpApiUrl"
+      }
+    ],
+    "compiledCloudFormationTemplate": {
+      "AWSTemplateFormatVersion": "2010-09-09",
+      "Description": "The AWS CloudFormation template for this Serverless application",
+      "Resources": {
+        "WebServerLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/codex-prod-webServer"
+          }
+        },
+        "ApiPingLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/codex-apiPing"
+          }
+        },
+        "IamRoleLambdaExecution": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com"
+                    ]
+                  },
+                  "Action": [
+                    "sts:AssumeRole"
+                  ]
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "codex",
+                      "prod",
+                      "lambda"
+                    ]
+                  ]
+                },
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                        "logs:TagResource"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:PutLogEvents"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-apiPing:*:*"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/codex-prod*:*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "lambda:InvokeFunction"
+                      ],
+                      "Resource": "arn:aws:lambda:us-east-1:*:function:api-*"
+                    }
+                  ]
+                }
+              }
+            ],
+            "Path": "/",
+            "RoleName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "codex",
+                  "prod",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  "lambdaRole"
+                ]
+              ]
+            }
+          }
+        },
+        "WebServerLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+              "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/webServer.zip"
+            },
+            "Handler": "services/web-server/dist/handler.handler",
+            "Runtime": "nodejs18.x",
+            "FunctionName": "codex-prod-webServer",
+            "MemorySize": 512,
+            "Timeout": 6,
+            "Environment": {
+              "Variables": {
+                "INTERNAL_API_PING_FN": "codex-apiPing"
+              }
+            },
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            }
+          },
+          "DependsOn": [
+            "WebServerLogGroup"
+          ]
+        },
+        "ApiPingLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+              "S3Key": "serverless/codex/prod/1750878974721-2025-06-25T19:16:14.721Z/apiPing.zip"
+            },
+            "Handler": "services/api/dist/handlers/ping.handler",
+            "Runtime": "nodejs18.x",
+            "FunctionName": "codex-apiPing",
+            "MemorySize": 512,
+            "Timeout": 6,
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            }
+          },
+          "DependsOn": [
+            "ApiPingLogGroup"
+          ]
+        },
+        "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "WebServerLambdaFunction"
+            },
+            "CodeSha256": "JDY3nbczUkVSD5kDjK9WcjXPzT3ubKmejnb8LEYuJfc="
+          }
+        },
+        "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "ApiPingLambdaFunction"
+            },
+            "CodeSha256": "6EQHP/dC3XsX3BDbtuM3GPnGzhUJPZVaOcvLIHAbW1g="
+          }
+        },
+        "HttpApi": {
+          "Type": "AWS::ApiGatewayV2::Api",
+          "Properties": {
+            "Name": "prod-codex",
+            "ProtocolType": "HTTP"
+          }
+        },
+        "HttpApiStage": {
+          "Type": "AWS::ApiGatewayV2::Stage",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "StageName": "$default",
+            "AutoDeploy": true,
+            "DefaultRouteSettings": {
+              "DetailedMetricsEnabled": false
+            }
+          }
+        },
+        "WebServerLambdaPermissionHttpApi": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Fn::GetAtt": [
+                "WebServerLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":execute-api:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  "/*"
+                ]
+              ]
+            }
+          }
+        },
+        "HttpApiIntegrationWebServer": {
+          "Type": "AWS::ApiGatewayV2::Integration",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": {
+              "Fn::GetAtt": [
+                "WebServerLambdaFunction",
+                "Arn"
+              ]
+            },
+            "PayloadFormatVersion": "2.0",
+            "TimeoutInMillis": 30000
+          }
+        },
+        "HttpApiRouteAnyProxyVar": {
+          "Type": "AWS::ApiGatewayV2::Route",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "RouteKey": "ANY /{proxy+}",
+            "Target": {
+              "Fn::Join": [
+                "/",
+                [
+                  "integrations",
+                  {
+                    "Ref": "HttpApiIntegrationWebServer"
+                  }
+                ]
+              ]
+            }
+          },
+          "DependsOn": "HttpApiIntegrationWebServer"
+        },
+        "ApiPingInvokePermission": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "ApiPingLambdaFunction"
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "lambda.amazonaws.com",
+            "SourceArn": {
+              "Fn::GetAtt": [
+                "WebServerLambdaFunction",
+                "Arn"
+              ]
+            }
+          }
+        }
+      },
+      "Outputs": {
+        "ServerlessDeploymentBucketName": {
+          "Value": "serverless-framework-deployments-us-east-1-262a5daa-ac8d",
+          "Export": {
+            "Name": "sls-codex-prod-ServerlessDeploymentBucketName"
+          }
+        },
+        "WebServerLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "WebServerLambdaVersionPdoMlt1OW8Y7je4mV0ByDKsq8HHKZdgmSPYEoRKuxlE"
+          },
+          "Export": {
+            "Name": "sls-codex-prod-WebServerLambdaFunctionQualifiedArn"
+          }
+        },
+        "ApiPingLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "ApiPingLambdaVersionlqRijdKZEw4kdYUqEDBwaCufeOr5YrPElPWyHsrA4"
+          },
+          "Export": {
+            "Name": "sls-codex-prod-ApiPingLambdaFunctionQualifiedArn"
+          }
+        },
+        "HttpApiId": {
+          "Description": "Id of the HTTP API",
+          "Value": {
+            "Ref": "HttpApi"
+          },
+          "Export": {
+            "Name": "sls-codex-prod-HttpApiId"
+          }
+        },
+        "HttpApiUrl": {
+          "Description": "URL of the HTTP API",
+          "Value": {
+            "Fn::Join": [
+              "",
+              [
+                "https://",
+                {
+                  "Ref": "HttpApi"
+                },
+                ".execute-api.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".",
+                {
+                  "Ref": "AWS::URLSuffix"
+                }
+              ]
+            ]
+          },
+          "Export": {
+            "Name": "sls-codex-prod-HttpApiUrl"
+          }
+        }
+      }
+    }
+  }
+}

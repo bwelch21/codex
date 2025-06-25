@@ -1,7 +1,7 @@
 {
-  "name": "@food-allergy-assistant/api",
+  "name": "@codex/api",
   "version": "1.0.0",
-  "description": "Internal API backend service for food allergy assistant",
+  "description": "Internal API backend service for the Codex food allergy assistant",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
@@ -21,7 +21,8 @@
     "typescript",
     "api",
     "node",
-    "food-allergy"
+    "food-allergy",
+    "codex"
   ],
   "author": "",
   "license": "MIT",
