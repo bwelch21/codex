@@ -16,11 +16,14 @@ export function createApp(): Application {
   // Security middleware
   app.use(helmet());
   
-  // CORS configuration - Allow frontend to connect
+  // CORS configuration - Relaxed in development to allow LAN and mobile testing
   app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
+    origin: process.env.NODE_ENV === 'production'
       ? process.env.ALLOWED_ORIGINS?.split(',') || []
-      : ['http://localhost:3000', 'http://localhost:5173'], // Common React dev ports
+      // Reflects the request origin in non-production, enabling access from
+      // http://<local-ip>:5173 (or any port you run Vite on) when testing from
+      // other devices on the same network.
+      : true,
     credentials: true,
   }));
 

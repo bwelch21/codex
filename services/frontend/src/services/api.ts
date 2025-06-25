@@ -64,19 +64,6 @@ export const webServerApi = {
   },
 };
 
-// Internal API calls (for future use)
-export const internalApi = {
-  async ping(): Promise<ApiResponse<unknown>> {
-    const url = `${API_CONFIG.INTERNAL_API.BASE_URL}${API_CONFIG.INTERNAL_API.ENDPOINTS.PING}`;
-    return apiRequest<ApiResponse<unknown>>(url);
-  },
-
-  async getHealth(): Promise<HealthResponse> {
-    const url = `${API_CONFIG.INTERNAL_API.BASE_URL}${API_CONFIG.INTERNAL_API.ENDPOINTS.HEALTH}`;
-    return apiRequest<HealthResponse>(url);
-  },
-};
-
 // Retry wrapper for failed requests
 export async function withRetry<T>(
   apiCall: () => Promise<T>,

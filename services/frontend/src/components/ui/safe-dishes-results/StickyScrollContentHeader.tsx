@@ -72,7 +72,7 @@ export function StickyScrollContentHeader({ viewMode, onToggle, summary }: Stick
         position: 'sticky',
         top: 0,
         zIndex: parseInt(theme.zIndex[40], 10),
-        backgroundColor: 'transparent',
+        backgroundColor: theme.colors.white,
         paddingTop: theme.spacing[2],
         paddingBottom: theme.spacing[2],
         paddingLeft: theme.spacing[3],

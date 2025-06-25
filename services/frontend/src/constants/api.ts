@@ -8,16 +8,6 @@ export const API_CONFIG = {
       HEALTH: "/health",
     },
   },
-
-  // Internal API endpoints (for future use)
-  INTERNAL_API: {
-    BASE_URL: import.meta.env.VITE_INTERNAL_API_URL || "http://localhost:4000",
-    ENDPOINTS: {
-      PING: "/api/ping",
-      HEALTH: "/health",
-    },
-  },
-
   // Request configuration
   TIMEOUT: 10000, // 10 seconds
   RETRY_ATTEMPTS: 3,

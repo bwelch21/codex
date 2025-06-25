@@ -5,11 +5,9 @@ import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 
 interface DishSwipeDeckProps {
   dishes: DishSafetyRecommendation[];
-  /** Optional callback when the user switches to list view */
-  onViewList?: () => void;
 }
 
-export function DishSwipeDeck({ dishes, onViewList }: DishSwipeDeckProps) {
+export function DishSwipeDeck({ dishes }: DishSwipeDeckProps) {
   const { isMobile } = useDeviceDetection();
   const [currentIdx, setCurrentIdx] = useState(0);
   const total = dishes.length;
@@ -73,6 +71,10 @@ export function DishSwipeDeck({ dishes, onViewList }: DishSwipeDeckProps) {
 
   const currentDish = dishes[currentIdx];
   const nextDish = currentIdx + 1 < total ? dishes[currentIdx + 1] : null;
+  const nextNextDish = currentIdx + 2 < total ? dishes[currentIdx + 2] : null;
+
+  // Determine safety styling for the currently focused dish
+  const currentSafety = getSafety(currentDish.safetyRank);
 
   return (
     <div
@@ -83,32 +85,39 @@ export function DishSwipeDeck({ dishes, onViewList }: DishSwipeDeckProps) {
         margin: '0 auto',
         minHeight: '420px',
         marginTop: isMobile ? theme.spacing[4] : 0,
-        paddingBottom: isMobile ? theme.spacing[12] : 0,
+        paddingBottom: theme.spacing[12],
       }}
     >
-      {/* Progress indicator */}
-      <div
-        style={{
-          textAlign: 'center',
-          marginBottom: theme.spacing[4],
-          fontSize: theme.typography.fontSize.sm,
-          color: theme.colors.neutral[600],
-        }}
-      >
-        {currentIdx + 1} of {total}
-      </div>
-
       {/* Card stack */}
       <div
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         style={{
           position: 'relative',
-          height: '100%',
+          height: 'auto',
           userSelect: 'none',
         }}
       >
-        {/* Next card (peeking) */}
+        {/* Next card and next next card (peeking) */}
+        {nextNextDish && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              transform: 'scale(0.94) translateY(30px) translateX(30px)',
+              transition: 'transform 0.3s ease',
+              borderRadius: theme.borderRadius.lg,
+              backgroundColor: theme.colors.neutral[100],
+              boxShadow: theme.boxShadow.base, 
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          />
+        )}
+        
         {nextDish && (
           <div
             style={{
@@ -116,12 +125,14 @@ export function DishSwipeDeck({ dishes, onViewList }: DishSwipeDeckProps) {
               top: 0,
               left: 0,
               right: 0,
-              transform: 'scale(0.94) translateY(20px)',
+              bottom: 0,
+              transform: 'scale(0.94) translateY(20px) translateX(20px)',
               transition: 'transform 0.3s ease',
               borderRadius: theme.borderRadius.lg,
               backgroundColor: theme.colors.neutral[100],
               boxShadow: theme.boxShadow.base,
               pointerEvents: 'none',
+              zIndex: 1,
             }}
           />
         )}
@@ -129,13 +140,13 @@ export function DishSwipeDeck({ dishes, onViewList }: DishSwipeDeckProps) {
         {/* Current card */}
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
+            position: 'relative',
+            zIndex: 2,
             backgroundColor: theme.colors.white,
             borderRadius: theme.borderRadius.lg,
             boxShadow: theme.boxShadow.lg,
+            // Safety border to visually communicate risk level
+            border: `2px solid ${currentSafety.color[300]}`,
             padding: theme.spacing[6],
             display: 'flex',
             flexDirection: 'column',
@@ -271,88 +282,17 @@ export function DishSwipeDeck({ dishes, onViewList }: DishSwipeDeckProps) {
         </div>
       </div>
 
-      {/* Swipe hint for mobile */}
-      {isMobile && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: theme.spacing[2],
-            marginTop: theme.spacing[4],
-            fontSize: theme.typography.fontSize.sm,
-            color: theme.colors.neutral[500],
-            userSelect: 'none',
-          }}
-        >
-          <span style={{ fontSize: theme.typography.fontSize.base }}>←</span>
-          <span>Swipe</span>
-          <span style={{ fontSize: theme.typography.fontSize.base }}>→</span>
-        </div>
-      )}
-
-      {/* Navigation controls for desktop */}
-      {!isMobile && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginTop: theme.spacing[6],
-          }}
-        >
-          <button
-            onClick={goPrev}
-            disabled={currentIdx === 0}
-            style={{
-              padding: `${theme.spacing[3]} ${theme.spacing[6]}`,
-              backgroundColor:
-                currentIdx === 0 ? theme.colors.neutral[300] : theme.colors.primary[500],
-              color: theme.colors.white,
-              border: 'none',
-              borderRadius: theme.borderRadius.md,
-              cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
-            }}
-          >
-            ← Back
-          </button>
-          <button
-            onClick={goNext}
-            disabled={currentIdx === total - 1}
-            style={{
-              padding: `${theme.spacing[3]} ${theme.spacing[6]}`,
-              backgroundColor:
-                currentIdx === total - 1
-                  ? theme.colors.neutral[300]
-                  : theme.colors.primary[500],
-              color: theme.colors.white,
-              border: 'none',
-              borderRadius: theme.borderRadius.md,
-              cursor: currentIdx === total - 1 ? 'not-allowed' : 'pointer',
-            }}
-          >
-            Next →
-          </button>
-        </div>
-      )}
-
-      {/* Full list view toggle */}
-      {onViewList && (
-        <div style={{ textAlign: 'center', marginTop: theme.spacing[4] }}>
-          <button
-            onClick={onViewList}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: theme.colors.primary[600],
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              fontSize: theme.typography.fontSize.sm,
-            }}
-          >
-            Switch to list view
-          </button>
-        </div>
-      )}
+      {/* Progress indicator */}
+      <div
+        style={{
+          textAlign: 'center',
+          marginTop: nextNextDish ? theme.spacing[8] : theme.spacing[4],
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.neutral[600],
+        }}
+      >
+        {currentIdx + 1} of {total}
+      </div>
     </div>
   );
 } 

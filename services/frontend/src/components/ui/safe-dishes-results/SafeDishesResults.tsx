@@ -5,6 +5,7 @@ import { DishSwipeDeck } from '../DishSwipeDeck';
 import { StickyScrollContentHeader } from './StickyScrollContentHeader';
 import { useDeviceDetection } from '../../../hooks/useDeviceDetection';
 import { DishCard } from './DishCard';
+import { SelectedAllergensDisplay } from './SelectedAllergensDisplay';
 
 interface SafeDishesResultsProps {
   results: SafeDishesResponse;
@@ -14,6 +15,7 @@ interface SafeDishesResultsProps {
 
 export const SafeDishesResults: React.FC<SafeDishesResultsProps> = ({
   results,
+  selectedAllergens,
   onStartOver,
 }) => {
   const { isMobile } = useDeviceDetection();
@@ -85,6 +87,8 @@ export const SafeDishesResults: React.FC<SafeDishesResultsProps> = ({
           </button>
         )}
       </div>
+
+      <SelectedAllergensDisplay selectedAllergens={selectedAllergens} />
 
       {/* Safety summary (desktop) */}
       {!isMobile && (
