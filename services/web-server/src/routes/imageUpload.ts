@@ -9,7 +9,7 @@ const storage = multer.memoryStorage();
 
 // File filter to only allow specific image types and PDFs
 const fileFilter = (
-  req: Request,
+  _req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ): void => {
@@ -41,7 +41,7 @@ const upload = multer({
 // Error handler for multer errors
 const handleMulterError = (
   error: unknown,
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ): Response | void => {
