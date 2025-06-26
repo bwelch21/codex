@@ -40,7 +40,7 @@ const upload = multer({
 
 // Custom internal route 
 const lambdaClient = new LambdaClient({});
-app.get('/internal/ping', async (_req, res) => {
+app.get('/api/ping', async (_req, res) => {
   const out = await lambdaClient.send(
     new InvokeCommand({
       FunctionName: process.env.INTERNAL_API_SERVICE_FN,
@@ -52,7 +52,7 @@ app.get('/internal/ping', async (_req, res) => {
 
 // Added internal route to invoke the API Lambda safe-dishes action
 app.post(
-  '/internal/safe-dishes',
+  '/api/safe-dishes',
   upload.single('file'),
   async (req, res) => {
     try {
