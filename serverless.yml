@@ -1,0 +1,107 @@
+service: codex
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        # webServer may invoke internal lambdas
+        - Effect: Allow
+          Action: lambda:InvokeFunction
+          Resource:
+            Fn::Sub: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${opt:stage, 'dev'}-apiService
+        # S3 access for upload/download path
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource:
+            - Fn::Sub: arn:aws:s3:::${self:service}-${opt:stage, 'dev'}-uploads/*
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:DeleteObject
+          Resource:
+            - Fn::Sub: arn:aws:s3:::${self:service}-${opt:stage, 'dev'}-uploads/*
+
+# Reduce Lambda bundle size – bundle each function separately and omit dev deps
+package:
+  individually: true
+  excludeDevDependencies: true
+
+functions:
+  webServer:
+    handler: services/web-server/dist/handler.handler
+    name: ${self:service}-${opt:stage, 'dev'}-webServer
+    memorySize: 512
+    timeout: 65
+    events:
+      - httpApi:             # public
+          method: ANY
+          path: /{proxy+}
+    environment:
+      INTERNAL_API_SERVICE_FN: ${self:service}-${opt:stage, 'dev'}-apiService
+      UPLOAD_BUCKET: ${self:service}-${opt:stage, 'dev'}-uploads
+    # Include only the transpiled code and production dependencies to stay well
+    # under the 250 MB unzipped Lambda limit.
+    package:
+      patterns:
+        - '!**'                                 # start with nothing
+        - services/web-server/dist/**           # compiled JS/TS output
+        - services/web-server/package.json
+        - services/web-server/node_modules/**   # runtime deps
+        - node_modules/**
+        # exclude misc files that bloat size
+        - '!**/*.map'
+        - '!**/test{,s}/**'
+        - '!**/__tests__/**'
+        - '!**/*.md'
+
+  apiService:                  # PRIVATE – no httpApi event
+    handler: services/api/dist/handler.handler
+    name: ${self:service}-${opt:stage, 'dev'}-apiService
+    memorySize: 512
+    timeout: 60
+    environment:
+      UPLOAD_BUCKET: ${self:service}-${opt:stage, 'dev'}-uploads
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    # Include only the transpiled code and production dependencies to stay well
+    # under the 250 MB unzipped Lambda limit.
+    package:
+      patterns:
+        - '!**'                                 # start with nothing
+        - services/api/dist/**           # compiled JS/TS output
+        - services/api/package.json
+        - services/api/node_modules/**   # runtime deps
+        - node_modules/**
+        # exclude misc files that bloat size
+        - '!**/*.map'
+        - '!**/test{,s}/**'
+        - '!**/__tests__/**'
+        - '!**/*.md'
+        - '!**/testFixtures/**'
+
+resources:
+  Resources:
+    ApiServiceInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref ApiServiceLambdaFunction
+        Action: lambda:InvokeFunction
+        Principal: lambda.amazonaws.com
+        SourceArn: !GetAtt WebServerLambdaFunction.Arn
+
+    UploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-${opt:stage, 'dev'}-uploads
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: BucketOwnerEnforced
+        LifecycleConfiguration:
+          Rules:
+            - Id: AutoDelete
+              Status: Enabled
+              ExpirationInDays: 7

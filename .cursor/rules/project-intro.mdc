@@ -337,6 +337,48 @@ npm run format
 - Optimize database queries (when added)
 - Monitor memory usage in Node.js services
 
+## 🚀 Deployment Overview
+
+### Frontend (Vercel)
+The `services/frontend` React application is deployed as a standalone project on **Vercel**. Vercel runs `npm install && npm run build` and serves the generated static site from its edge network. Environment variables (e.g. `VITE_PUBLIC_API_BASE_URL`) can be set in the Vercel dashboard to point the UI at the correct public API URL.
+
+### Backend (AWS Lambda via Serverless Framework)
+
+The **web-server** and **api** services are each packaged as AWS Lambda functions and deployed with the **Serverless Framework** (`npx serverless deploy --stage prod`). The resulting CloudFormation stack includes:
+
+* **Lambda Functions**: `webServer`, `apiService`
+* **HTTP API Gateway**: Public ANY → `webServer` Lambda integration
+* **S3 Upload Bucket**: `${service}-${stage}-uploads` with a 7-day lifecycle rule
+* **IAM Role**: Grants the `webServer` Lambda permission to invoke `apiService`
+
+#### Lambda Interaction Flow
+
+```
+Browser → API Gateway → webServer Lambda ──┐
+                                          │ (Invoke)
+                                          ▼
+                                  apiService Lambda
+```
+
+The webServer Lambda proxies certain internal requests to the apiService Lambda using the custom `action` payload field. Currently supported actions are:
+
+| Action       | Purpose                                     |
+| ------------ | ------------------------------------------- |
+| `ping`       | Simple connectivity check                   |
+| `safe-dishes`| Analyse a menu image and return safe dishes |
+
+### Build & Deploy Commands
+
+```bash
+# Compile all services (mandatory for deploy)
+npm run build
+
+# Deploy backend (production stage example)
+npx serverless deploy --stage prod
+```
+
+Deploying will output the public API URL; ensure the frontend's environment variable points to it.
+
 ---
 
 **Remember**: This is a food allergy application where user safety is paramount. Every feature should be designed with the understanding that incorrect information could have serious health consequences.

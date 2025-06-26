@@ -22,4 +22,9 @@ export interface ErrorResponse {
   message: string;
   statusCode: number;
   timestamp: string;
-} 
+}
+
+export interface LambdaResponse {
+  statusCode: number;
+  body: string;
+}

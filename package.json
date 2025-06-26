@@ -1,5 +1,5 @@
 {
-  "name": "food-allergy-assistant",
+  "name": "codex",
   "version": "1.0.0",
   "description": "A comprehensive food allergy assistant application with API backend, web frontend, and web server",
   "private": true,
@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web-server\" \"npm run dev:frontend\"",
     "dev:api": "npm run dev --workspace=services/api",
-    "dev:web-server": "npm run dev --workspace=services/web-server", 
+    "dev:web-server": "npm run dev --workspace=services/web-server",
     "dev:frontend": "npm run dev --workspace=services/frontend",
     "build": "npm run build --workspaces",
     "build:api": "npm run build --workspace=services/api",
@@ -48,5 +48,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "serverless": "^4.17.1"
   }
-} 
+}

@@ -1,7 +1,7 @@
 {
-  "name": "@food-allergy-assistant/web-server",
+  "name": "@codex/web-server",
   "version": "1.0.0",
-  "description": "Public-facing web server for food allergy assistant",
+  "description": "Public-facing web server for the Codex food allergy assistant",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
@@ -21,7 +21,8 @@
     "typescript",
     "web-server",
     "node",
-    "food-allergy"
+    "food-allergy",
+    "codex"
   ],
   "author": "",
   "license": "MIT",
@@ -34,7 +35,11 @@
     "form-data": "^4.0.3",
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "@aws-sdk/client-lambda": "^3.835.0",
+    "@aws-sdk/client-s3": "^3.835.0",
+    "uuid": "^9.0.1",
+    "@codegenie/serverless-express": "^4.16.0"
   },
   "devDependencies": {
     "@types/compression": "^1.7.5",
