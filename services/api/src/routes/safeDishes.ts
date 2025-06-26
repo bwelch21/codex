@@ -6,10 +6,10 @@ import {
   BIG_NINE_ALLERGENS,
   SafeDishesResponse,
 } from '../types/safeDishes';
-import { DishSafetyService } from '../services/dishSafety';
+import { generateSafeDishes } from '../services/safeDishesProcessor';
+import { parseAllergens } from '../utils/allergenUtils';
 
 const router = Router();
-const dishSafetyService = new DishSafetyService();
 
 // Multer configuration (reuse settings from menuRoutes)
 const upload = multer({
@@ -87,17 +87,11 @@ router.post(
         return;
       }
 
-      // Call LLM-based safety ranking directly with the image
-      const recommendations = await dishSafetyService.rankDishes(
+      // Execute core business logic
+      const response: SafeDishesResponse = await generateSafeDishes(
         req.file.buffer,
         parsedAllergens,
       );
-
-      const response: SafeDishesResponse = {
-        analyzedAt: new Date().toISOString(),
-        processedAllergenIds: parsedAllergens.map(a => a.id),
-        recommendations,
-      };
 
       const apiRes: ApiResponse<SafeDishesResponse> = {
         success: true,
@@ -121,32 +115,5 @@ router.post(
     }
   },
 );
-
-// Utility to parse allergens input (JSON array or comma-separated string)
-function parseAllergens(raw: unknown): Allergen[] {
-  if (!raw) return [];
-  try {
-    if (typeof raw === 'string' && raw.trim().startsWith('[')) {
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr.map((s) => getAllergenById(String(s))).filter((a): a is Allergen => a !== undefined) : [];
-    }
-    if (typeof raw === 'string') {
-      return raw
-        .split(',')
-        .map((s) => getAllergenById(String(s)))
-        .filter((a): a is Allergen => a !== undefined);
-    }
-    if (Array.isArray(raw)) {
-      return raw.map((s) => getAllergenById(String(s))).filter((a): a is Allergen => a !== undefined);
-    }
-  } catch {
-    // fallthrough
-  }
-  return [];
-}
-
-function getAllergenById(id: string): Allergen | undefined {
-  return BIG_NINE_ALLERGENS.find(a => a.id === id);
-}
 
 export { router as safeDishesRoutes };
