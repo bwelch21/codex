@@ -37,6 +37,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "@aws-sdk/client-lambda": "^3.835.0",
+    "@aws-sdk/client-s3": "^3.835.0",
+    "uuid": "^9.0.1",
     "@codegenie/serverless-express": "^4.16.0"
   },
   "devDependencies": {
