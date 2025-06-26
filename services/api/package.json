@@ -36,6 +36,7 @@
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "@aws-sdk/client-s3": "^3.835.0",
     "pdf-parse": "^1.1.1",
     "pdf2pic": "^3.2.0",
     "sharp": "^0.33.5",

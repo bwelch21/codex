@@ -151,36 +151,77 @@ npm run build:frontend
 npm run start
 ```
 
+## 🚀 Deployment & Production
+
+### 1. Frontend (Vercel)
+
+The React application located in `services/frontend` is deployed as a standalone project on **Vercel**:
+
+1. Vercel detects the workspace automatically and runs `npm install && npm run build` as its build step.
+2. The generated static site is served globally via Vercel's Edge Network.
+3. Environment variables (if needed) can be configured via the Vercel dashboard.
+
+### 2. Backend (AWS – Serverless Framework)
+
+Both the **web-server** and **api** services are packaged as AWS Lambda functions and provisioned with the **Serverless Framework**. The stack also contains an S3 bucket and an HTTP API Gateway.
+
+```
+AWS API Gateway (HTTP API)
+          │
+          ▼
+  webServer Lambda  (public-facing)
+          │
+          ▼
+   apiService Lambda (internal)
+```
+
+• **webServer Lambda** – Handles public HTTP requests and proxies internal tasks to the `apiService` Lambda.
+• **apiService Lambda** – Performs business logic such as menu analysis.
+
+#### Supported internal actions
+
+| Action         | Description                           |
+| -------------- | ------------------------------------- |
+| `ping`         | Simple connectivity test              |
+| `safe-dishes`  | Analyze a menu image for safe dishes  |
+
+#### Build & Deploy commands
+
+```bash
+# Compile TypeScript for all services (mandatory before deploy)
+npm run build
+
+# Deploy to AWS (production stage)
+npx serverless deploy --stage prod
+```
+
+The deploy command packages both Lambdas, uploads them to S3, and applies a CloudFormation stack containing:
+
+* Lambda functions (`webServer`, `apiService`)
+* S3 upload bucket (7-day lifecycle rule)
+* HTTP API Gateway with an ANY → webServer Lambda integration
+* IAM role allowing the webServer Lambda to invoke the apiService Lambda
+
+Once the deployment finishes, the HTTP API URL is displayed in the Serverless output. Point the Vercel frontend environment variable `VITE_PUBLIC_API_BASE_URL` (or similar) to this URL.
+
+### 3. Local production build
+
+If you need to build without deploying:
+
+```bash
+# Build all services
+npm run build
+
+# Build individual services
+npm run build:api
+npm run build:web-server
+npm run build:frontend
+
+# Optionally run the compiled code locally
+npm run start
+```
+
 ## 📡 API Endpoints & Integration
-
-### Current Working Endpoints
-
-#### Web Server (Public API) - http://localhost:3001
-- **GET** `/api/hello-world`
-  ```json
-  {
-    "success": true,
-    "data": {
-      "message": "Hello, World!",
-      "timestamp": "2025-01-01T00:00:00.000Z",
-      "service": "web-server"
-    }
-  }
-  ```
-- **GET** `/health` - Service health and uptime
-
-#### Internal API - http://localhost:4000  
-- **GET** `/api/ping` - Internal connectivity test
-- **GET** `/health` - Service health and uptime
-
-### Frontend Integration
-
-The React frontend successfully connects to the web server and displays:
-- ✅ **Hello World Message**: Fetched from `/api/hello-world`
-- ✅ **Service Information**: Shows timestamp and service name
-- ✅ **Loading States**: Proper loading indicators
-- ✅ **Error Handling**: User-friendly error messages
-- ✅ **Refresh Functionality**: Manual data refresh capability
 
 ## 🎨 Design System & UI
 

@@ -1,9 +1,11 @@
 import { parseAllergens } from '../utils/allergenUtils';
 import { generateSafeDishes } from '../services/safeDishesProcessor';
 import { LambdaResponse } from '../types/common';
+import { S3Client, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
 
 interface SafeDishesEvent {
-  fileBase64?: string;
+  s3Key?: string;
   allergenIds?: unknown;
   // allow any other fields
   [key: string]: unknown;
@@ -14,16 +16,24 @@ interface SafeDishesEvent {
  */
 export async function safeDishesHandler(event: SafeDishesEvent): Promise<LambdaResponse> {
   try {
-    const { fileBase64, allergenIds } = event;
+    // Log the raw incoming event to help with debugging (omit large fields)
+    console.info('[safe-dishes] Incoming event', {
+      // Log only primitives to avoid massive CloudWatch entries
+      keys: Object.keys(event ?? {}),
+      s3Key: (event as SafeDishesEvent).s3Key,
+      allergenIds: (event as SafeDishesEvent).allergenIds,
+    });
 
-    // Input validation
-    if (!fileBase64) {
+    const { s3Key, allergenIds } = event;
+
+    // Input validation – require s3Key
+    if (!s3Key) {
       return {
         statusCode: 400,
         body: JSON.stringify({
           success: false,
           error: {
-            message: 'fileBase64 is required for safe-dishes action',
+            message: 's3Key is required for safe-dishes action',
             code: 'NO_FILE_PROVIDED',
             timestamp: new Date().toISOString(),
           },
@@ -31,7 +41,45 @@ export async function safeDishesHandler(event: SafeDishesEvent): Promise<LambdaR
       };
     }
 
-    const imageBuffer = Buffer.from(fileBase64, 'base64');
+    const s3 = new S3Client({});
+
+    console.info('[safe-dishes] Fetching object from S3', {
+      bucket: process.env.UPLOAD_BUCKET,
+      key: s3Key,
+    });
+
+    const obj = await s3.send(
+      new GetObjectCommand({
+        Bucket: process.env.UPLOAD_BUCKET as string,
+        Key: s3Key,
+      })
+    );
+
+    const streamToBuffer = async (stream: Readable): Promise<Buffer> => {
+      const chunks: Buffer[] = [];
+      for await (const chunk of stream) {
+        chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+      }
+      return Buffer.concat(chunks);
+    };
+
+    const imageBuffer = await streamToBuffer(obj.Body as Readable);
+
+    // Clean up the uploaded object to save space (best effort)
+    try {
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.UPLOAD_BUCKET as string,
+          Key: s3Key,
+        })
+      );
+    } catch (cleanupErr) {
+      console.error('Failed to delete S3 object', cleanupErr);
+    }
+
+    console.info('[safe-dishes] Retrieved image from S3', {
+      sizeInBytes: imageBuffer.byteLength,
+    });
 
     const allergens = parseAllergens(allergenIds);
     if (allergens.length === 0) {
@@ -48,14 +96,23 @@ export async function safeDishesHandler(event: SafeDishesEvent): Promise<LambdaR
       };
     }
 
+    console.info('[safe-dishes] Generating dish recommendations');
+    
+    const startTime = Date.now();
     const safeDishesResponse = await generateSafeDishes(imageBuffer, allergens);
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    
+    console.info('[safe-dishes] Successfully generated recommendations', {
+      durationMs: duration,
+    });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true, data: safeDishesResponse }),
+      body: JSON.stringify({ success: true, durationMs: duration, data: safeDishesResponse }),
     };
   } catch (error) {
-    console.error('Lambda safe-dishes error', error);
+    console.error('[safe-dishes] Unhandled error', error);
     return {
       statusCode: 500,
       body: JSON.stringify({
