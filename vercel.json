@@ -1,0 +1,5 @@
+{
+  "env": {
+    "VITE_WEB_SERVER_URL": "https://5gwa80grvh.execute-api.us-east-1.amazonaws.com"
+  }
+}
