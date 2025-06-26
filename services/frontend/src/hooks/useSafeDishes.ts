@@ -14,6 +14,8 @@ interface UseSafeDishesReturn {
   reset: () => void;
 }
 
+const WEB_SERVER_URL = import.meta.env.VITE_WEB_SERVER_URL || 'http://localhost:3001';
+
 export function useSafeDishes(): UseSafeDishesReturn {
   const [state, setState] = useState<SafeDishesState>({
     isAnalyzing: false,
@@ -53,17 +55,7 @@ export function useSafeDishes(): UseSafeDishesReturn {
         }));
       }, 1000);
 
-      // In production we rely on Vercel's rewrite rule so a relative path is
-      // sufficient. During local development we still need to hit the Express
-      // dev server running on port 3001 (or a custom override via
-      // VITE_WEB_SERVER_URL).
-      const baseUrl =
-        import.meta.env.DEV
-          ? ((import.meta.env.VITE_WEB_SERVER_URL as string | undefined) ??
-              'http://localhost:3001')
-          : '';
-
-      const response = await fetch(`${baseUrl}/api/safe-dishes`, {
+      const response = await fetch(`${WEB_SERVER_URL}/api/safe-dishes`, {
         method: 'POST',
         body: formData,
       });
