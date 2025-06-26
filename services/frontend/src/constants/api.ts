@@ -2,15 +2,7 @@
 export const API_CONFIG = {
   // Web server endpoints (public-facing API)
   WEB_SERVER: {
-    // Use a relative URL in production so that the frontend can rely on the
-    // Vercel rewrite rule (/api → API Gateway). In development we still hit the
-    // local Express proxy running on port 3001 unless the developer overrides
-    // it via VITE_WEB_SERVER_URL.
-    BASE_URL:
-      import.meta.env.DEV
-        ? ((import.meta.env.VITE_WEB_SERVER_URL as string | undefined) ??
-            "http://localhost:3001")
-        : "",
+    BASE_URL: import.meta.env.VITE_WEB_SERVER_URL || "http://localhost:3001",
     ENDPOINTS: {
       HELLO_WORLD: "/api/hello-world",
       HEALTH: "/health",

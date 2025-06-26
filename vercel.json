@@ -1,12 +1,5 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://5gwa80grvh.execute-api.us-east-1.amazonaws.com/api/$1"
-    },
-    {
-      "source": "/health",
-      "destination": "https://5gwa80grvh.execute-api.us-east-1.amazonaws.com/health"
-    }
-  ]
+  "env": {
+    "VITE_WEB_SERVER_URL": "https://5gwa80grvh.execute-api.us-east-1.amazonaws.com"
+  }
 }
