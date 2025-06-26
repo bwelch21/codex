@@ -1,3 +1,6 @@
+import { pingHandler } from './lambda-handlers/pingHandler';
+import { safeDishesHandler } from './lambda-handlers/safeDishesHandler';
+
 export interface InternalEvent {
   action?: string;
   [key: string]: unknown;
@@ -7,30 +10,10 @@ export interface InternalEvent {
 export const handler = async (event: InternalEvent) => {
   switch (event.action) {
     case 'ping': {
-      const response = {
-        success: true,
-        data: {
-          message: 'pong',
-          timestamp: new Date().toISOString(),
-          uptime: process.uptime(),
-        },
-      };
-      return {
-        statusCode: 200,
-        body: JSON.stringify(response),
-      };
+      return pingHandler();
     }
-    case 'textExtraction': {
-      const response = {
-        success: true,
-        data: {
-          message: 'pong',
-        },
-      };
-      return {
-        statusCode: 200,
-        body: JSON.stringify(response),
-      };
+    case 'safe-dishes': {
+      return safeDishesHandler(event);
     }
 
     default: {
@@ -44,4 +27,3 @@ export const handler = async (event: InternalEvent) => {
     }
   }
 };
-

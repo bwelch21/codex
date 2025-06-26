@@ -57,6 +57,7 @@ functions:
         - services/api/dist/**           # compiled JS/TS output
         - services/api/package.json
         - services/api/node_modules/**   # runtime deps
+        - node_modules/**
         # exclude misc files that bloat size
         - '!**/*.map'
         - '!**/test{,s}/**'
