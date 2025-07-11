@@ -5,6 +5,19 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
+  httpApi:
+    cors:
+      allowedOrigins:
+        - https://codex-frontend-nine.vercel.app
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - x-api-key
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
+      allowCredentials: true
   iam:
     role:
       statements:
