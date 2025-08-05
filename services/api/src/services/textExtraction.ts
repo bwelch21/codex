@@ -152,7 +152,7 @@ export class TextExtractionService {
           jpegQuality: 60,
           compressCrops: false,
           confidenceThreshold: 0.5,
-          detectionUrl: 'https://serverless.roboflow.com/menu-text-box/13?api_key=***REMOVED***',
+          detectionUrl: `https://serverless.roboflow.com/menu-text-box/13?api_key=${process.env.ROBOFLOW_API_KEY}`,
         }
       );
 
