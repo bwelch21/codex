@@ -1,6 +1,4 @@
-# Food Allergy Assistant
-
-A comprehensive monorepo application designed to improve quality of life for people with food allergies, specifically focusing on safe dining and travel experiences.
+# Codex
 
 ## 🚀 Overview
 
